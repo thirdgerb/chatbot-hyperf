@@ -1,5 +1,5 @@
 {
-    "name": "thirdgerb/chatbot-hyperf",
+    "name": "commune/chatbot-hyperf",
     "description": "chatbot studio framework for project thirdgerb/studio-hyperf",
     "type": "library",
     "license": "MIT",
