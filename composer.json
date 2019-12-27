@@ -1,0 +1,30 @@
+{
+    "name": "thirdgerb/chatbot-hyperf",
+    "description": "chatbot studio framework for project thirdgerb/studio-hyperf",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "thirdgerb",
+            "email": "thirdgerb@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Commune\\Hyperf\\": "src/Hyperf/",
+            "Commune\\Platform\\": "src/Platform/"
+        }
+    },
+    "minimum-stability": "RC",
+    "require": {
+        "php": ">=7.2",
+        "ext-swoole": ">=4.4",
+        "commune/chatbot": "~0.1.0",
+        "hyperf/framework": "~1.1.0",
+        "hyperf/http-server": "~1.1.0",
+        "symfony/http-foundation": "^4.2"
+    },
+    "require-dev": {
+        "swoft/swoole-ide-helper": "^4.4"
+    }
+}

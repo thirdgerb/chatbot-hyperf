@@ -1,0 +1,2 @@
+Library for [commune/studio-hyperf](https://github.com/thirdgerb/studio-hyperf),
+binding chatbot framework [commune/chatbot](https://github.com/thirdgerb/chatbot) with server framework [Hyperf](https://github.com/hyperf/hyperf).
