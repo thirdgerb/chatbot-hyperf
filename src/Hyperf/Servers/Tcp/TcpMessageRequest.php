@@ -56,7 +56,7 @@ class TcpMessageRequest extends AbstractMessageRequest
     {
     }
 
-    protected function onBindConversation()
+    protected function onBindConversation() : void
     {
     }
 
