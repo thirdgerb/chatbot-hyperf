@@ -4,7 +4,7 @@ namespace Commune\Hyperf\Foundations\Options;
 
 use Commune\Chatbot\Config\ChatbotConfig;
 use Commune\Support\Option;
-use Hyperf\Server\Server;
+use Hyperf\Server\ServerInterface;
 use Hyperf\Server\SwooleEvent;
 use Hyperf\Framework\Bootstrap;
 
@@ -58,7 +58,7 @@ class AppServerOption extends Option
                 'servers' => [
                     [
                         'name' => 'http',
-                        'type' => Server::SERVER_TCP,
+                        'type' => ServerInterface::SERVER_BASE,
                         'host' => 'localhost',
                         'port' => 9501,
                         'sock_type' => SWOOLE_SOCK_TCP,
@@ -78,9 +78,6 @@ class AppServerOption extends Option
                     'socket_buffer_size' => 2 * 1024 * 1024,
                 ],
                 'callbacks' => [
-                    SwooleEvent::ON_BEFORE_START => [Bootstrap\ServerStartCallback::class, 'beforeStart'],
-                    SwooleEvent::ON_WORKER_START => [Bootstrap\WorkerStartCallback::class, 'onWorkerStart'],
-                    SwooleEvent::ON_PIPE_MESSAGE => [Bootstrap\PipeMessageCallback::class, 'onPipeMessage'],
                 ],
             ],
         ];
