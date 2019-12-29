@@ -15,11 +15,10 @@
             "Commune\\Platform\\": "src/Platform/"
         }
     },
-    "minimum-stability": "RC",
     "require": {
         "php": ">=7.2",
         "ext-swoole": ">=4.4",
-        "commune/chatbot": "~0.1.0",
+        "commune/chatbot": "~0.1.0@dev",
         "hyperf/framework": "~1.1.0",
         "hyperf/http-server": "~1.1.0",
         "symfony/http-foundation": "^4.2"
