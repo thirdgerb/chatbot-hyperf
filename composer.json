@@ -11,20 +11,28 @@
     ],
     "autoload": {
         "psr-4": {
-            "Commune\\Hyperf\\": "src/Hyperf/",
-            "Commune\\Platform\\": "src/Platform/"
+            "Commune\\Chatbot\\Hyperf\\": "src/"
         }
     },
     "minimum-stability": "dev",
     "require": {
         "php": ">=7.2",
-        "ext-swoole": ">=4.4",
-        "commune/chatbot": "dev-develop",
-        "hyperf/framework": "~1.1.0",
-        "hyperf/http-server": "~1.1.0",
-        "symfony/http-foundation": "^4.2"
+        "ext-swoole": ">=4.5",
+        "commune/chatbot": "dev-master",
+        "hyperf/hyperf": "~2.0.0"
     },
     "require-dev": {
         "swoft/swoole-ide-helper": "^4.4"
-    }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.2.x-dev"
+        }
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "../chatbot"
+        }
+    ]
 }
