@@ -26,11 +26,6 @@
     "require-dev": {
         "swoft/swoole-ide-helper": "^4.4"
     },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "0.2.x-dev"
-        }
-    },
     "repositories": [
         {
             "type": "git",
