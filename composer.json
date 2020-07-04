@@ -23,10 +23,20 @@
         "hyperf/framework": "~2.0.0",
         "hyperf/redis": "~2.0.0",
         "hyperf/command": "~2.0.0",
-        "hyperf/db-connection": "~2.0.0",
-        "doctrine/annotations": "^1.6"
+        "hyperf/db-connection": "~2.0.0"
     },
     "require-dev": {
         "swoft/swoole-ide-helper": "^4.4"
-    }
+    },
+    "extra" : {
+        "hyperf": {
+            "config": "Commune\\Chatbot\\Hyperf\\ConfigProvider"
+        }
+    },
+    "repositories" : [
+        {
+            "type": "path",
+            "url": "../chatbot"
+        }
+    ]
 }

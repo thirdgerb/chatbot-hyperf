@@ -21,7 +21,7 @@ class MemoryRepository
     {
         $table->increments('id');
 
-        FieldHelper::uuidField($table, 'memory_id')
+        SchemaHelper::uuidField($table, 'memory_id')
             ->comment('记忆体ID');
 
         $table->binary('memory_data')->comment('记忆体的内容');

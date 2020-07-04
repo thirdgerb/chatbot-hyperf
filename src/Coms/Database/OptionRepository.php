@@ -19,12 +19,12 @@ class OptionRepository
     {
         $table->increments('id');
 
-        $table->char('uuid', 32);
+        $table->char('uuid', 40);
 
         // category name
         $table->string('category_name', 100);
 
-        $table->string('option_id', 100);
+        $table->string('option_id');
 
         $table->string('title');
         $table->string('desc');

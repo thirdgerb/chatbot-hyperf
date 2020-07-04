@@ -7,15 +7,16 @@ use Hyperf\Database\Schema\Blueprint;
 use Hyperf\Database\Schema\ColumnDefinition;
 
 
-class FieldHelper
+class SchemaHelper
 {
-    public static $uuidLength = 50;
-
-    public static $protocalIdLength = 200;
-
     public static function uuidField(Blueprint $table, string $name) : ColumnDefinition
     {
-        return $table->string($name, self::$uuidLength);
+        return $table->string($name);
+    }
+
+    public static function idField(Blueprint $table, string $name) : ColumnDefinition
+    {
+        return $table->string($name);
     }
 
 

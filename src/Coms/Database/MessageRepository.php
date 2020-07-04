@@ -240,25 +240,25 @@ class MessageRepository
         $table->bigIncrements('id')
             ->comment('消息表的子增ID');
 
-        FieldHelper::uuidField($table, 'message_id')
+        SchemaHelper::uuidField($table, 'message_id')
             ->comment('消息ID. ');
 
-        FieldHelper::uuidField($table, 'traceId_id')
+        SchemaHelper::idField($table, 'traceId_id')
             ->comment('服务化调用的追踪ID');
 
-        FieldHelper::uuidField($table, 'batch_id')
+        SchemaHelper::uuidField($table, 'batch_id')
             ->comment('消息的批次, 通常由输入消息决定');
 
-        FieldHelper::uuidField($table, 'session_id')
+        SchemaHelper::idField($table, 'session_id')
             ->comment('消息相对于 Ghost 的 session id');
 
-        FieldHelper::uuidField($table, 'from_session')
+        SchemaHelper::idField($table, 'from_session')
             ->comment('消息起源的 sessionId. ');
 
-        FieldHelper::uuidField($table, 'convo_id')
+        SchemaHelper::idField($table, 'convo_id')
             ->comment('消息所属的多轮对话 ID');
 
-        FieldHelper::uuidField($table, 'creator_id')
+        SchemaHelper::idField($table, 'creator_id')
             ->comment('消息创建者的 ID');
 
         $table->string('creator_name', 30)
