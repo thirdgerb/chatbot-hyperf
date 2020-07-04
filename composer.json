@@ -19,8 +19,11 @@
     "require": {
         "php": ">=7.2",
         "ext-swoole": ">=4.5",
-        "commune/chatbot": "dev-develop",
-        "hyperf/hyperf": "~2.0.0",
+        "commune/chatbot": "dev-master",
+        "hyperf/framework": "~2.0.0",
+        "hyperf/redis": "~2.0.0",
+        "hyperf/command": "~2.0.0",
+        "hyperf/db-connection": "~2.0.0",
         "doctrine/annotations": "^1.6"
     },
     "require-dev": {
