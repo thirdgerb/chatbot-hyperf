@@ -15,11 +15,13 @@
         }
     },
     "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
         "php": ">=7.2",
         "ext-swoole": ">=4.5",
-        "commune/chatbot": "dev-master",
-        "hyperf/hyperf": "~2.0.0"
+        "commune/chatbot": "dev-develop",
+        "hyperf/hyperf": "~2.0.0",
+        "doctrine/annotations": "^1.6"
     },
     "require-dev": {
         "swoft/swoole-ide-helper": "^4.4"

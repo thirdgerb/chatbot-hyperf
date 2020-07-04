@@ -6,7 +6,7 @@
  * @package Commune\Chatbot\Hyperf\Services
  */
 
-namespace Commune\Chatbot\Hyperf\Coms;
+namespace Commune\Chatbot\Hyperf\Providers;
 
 
 use Commune\Container\ContainerContract;
@@ -21,8 +21,7 @@ use Commune\Chatbot\Hyperf\Coms\Broadcaster\HfRedisBroadcaster;
 /**
  * 基于 Hyperf 的 Redis 连接池, 以及 Redis 的广播来实现的广播模块.
  *
- *
- * @property-read string $poolName          使用 Hyperf 的哪个 Redis 连接池.
+ * @property-read string $redis             使用 Hyperf 的哪个 Redis 连接池.
  * @property-read string[] $listeningShells 每条消息都会广播到的目标 Shell. 通常是管理员 Shell.
  */
 class BroadcastByHfRedisProvider extends ServiceProvider
@@ -34,7 +33,10 @@ class BroadcastByHfRedisProvider extends ServiceProvider
 
     public static function stub(): array
     {
-        return [];
+        return [
+            'redis' => 'default',
+            'listeningShells' => [],
+        ];
     }
 
     public function boot(ContainerContract $app): void
@@ -58,7 +60,7 @@ class BroadcastByHfRedisProvider extends ServiceProvider
                     $poolFactory,
                     $redisFactory,
                     $logger,
-                    $this->poolName,
+                    $this->redis,
                     $this->listeningShells
                 );
             }

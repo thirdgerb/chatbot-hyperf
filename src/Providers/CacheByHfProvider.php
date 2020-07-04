@@ -2,29 +2,25 @@
 
 
 /**
- * Class CacheByRedisFactoryProvider
- * @package Commune\Chatbot\Hyperf\Services
+ * Class CacheByHfProvider
+ * @package Commune\Chatbot\Hyperf\Providers
  */
 
-namespace Commune\Chatbot\Hyperf\Coms;
+namespace Commune\Chatbot\Hyperf\Providers;
 
 
 use Commune\Chatbot\Hyperf\Coms\Cache\HfRedisCache;
 use Commune\Container\ContainerContract;
-use Commune\Contracts\Cache;
 use Commune\Contracts\ServiceProvider;
 use Hyperf\Redis\RedisFactory;
 use Hyperf\Utils\ApplicationContext;
 
 /**
- * Class CacheByRedisFactoryProvider
  *
- * 基于 Hyperf 的 RedisFactory 实现的 Cache.
- *
- * @property-read string $prefix    缓存的前缀.
- * @property-read string $poolName  使用 Hyperf 的哪一个 Redis pool
+ * @property-read string $redis     所使用的 Hyperf redis 连接.
+ * @property-read string $prefix    所有缓存 key 的前缀.
  */
-class CacheByHfRedisProvider extends ServiceProvider
+class CacheByHfProvider extends ServiceProvider
 {
     public function getDefaultScope(): string
     {
@@ -34,14 +30,9 @@ class CacheByHfRedisProvider extends ServiceProvider
     public static function stub(): array
     {
         return [
-            'prefix' => '',
-            'poolName' => 'default',
+            'redis' => 'default',
+            'prefix' => 'hf',
         ];
-    }
-
-    public function getId(): string
-    {
-        return static::class . '::' . $this->prefix;
     }
 
     public function boot(ContainerContract $app): void
@@ -51,15 +42,14 @@ class CacheByHfRedisProvider extends ServiceProvider
     public function register(ContainerContract $app): void
     {
         $app->singleton(
-            Cache::class,
+            ContainerContract::class,
             function (ContainerContract $app) {
 
-                $factory = ApplicationContext::getContainer()
-                    ->get(RedisFactory::class);
+                $factory = ApplicationContext::getContainer()->get(RedisFactory::class);
 
                 return new HfRedisCache(
                     $factory,
-                    $this->poolName,
+                    $this->redis,
                     $this->prefix
                 );
             }

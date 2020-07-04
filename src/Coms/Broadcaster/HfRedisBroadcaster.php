@@ -9,17 +9,14 @@
 namespace Commune\Chatbot\Hyperf\Coms\Broadcaster;
 
 
-use Commune\Support\Swoole\SwooleUtils;
-use Hyperf\DB\ConnectionInterface;
-use Hyperf\Redis\Pool\RedisPool;
 use Hyperf\Redis\Redis;
+use Hyperf\Redis\Pool\RedisPool;
 use Hyperf\Redis\RedisConnection;
 use Hyperf\Redis\Pool\PoolFactory;
 use Commune\Blueprint\CommuneEnv;
 use Commune\Framework\Messenger\Broadcaster\AbsBroadcaster;
 use Hyperf\Redis\RedisFactory;
 use Psr\Log\LoggerInterface;
-use Swoole\Coroutine;
 
 /**
  * 基于 Hyperf Redis 模块实现的广播模块.

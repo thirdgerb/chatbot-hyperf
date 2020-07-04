@@ -27,8 +27,6 @@ use Psr\SimpleCache\CacheInterface;
  * 因此这个 Cache 可以做成进程级的单例, 并持有一个 Redis 单例.
  * 这种做法会在一个 Session 中频繁地切换 client, 但不会被一个 Session 占用一个 client 过长时间.
  *
- * 目前的问题是, 连接异常的时候...自己 retry, 最终会怎么样.
- * 研究代码花的时间较多, 先信任 Hyperf 的解决方案.
  *
  */
 class HfRedisCache implements Cache

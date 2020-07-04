@@ -8,54 +8,164 @@
 
 namespace Commune\Chatbot\Hyperf\Coms\Runtime;
 
-
+use Commune\Blueprint\Exceptions\IO\LoadDataException;
+use Commune\Contracts\Cache;
+use Commune\Support\Babel\Babel;
+use Hyperf\DbConnection\Db;
+use Hyperf\Database\ConnectionInterface;
+use Commune\Framework\RuntimeDriver\CacheRuntimeDriver;
+use Commune\Blueprint\Exceptions\IO\SaveDataException;
+use Commune\Blueprint\Ghost\Cloner\ClonerLogger;
 use Commune\Blueprint\Ghost\Memory\Memory;
-use Commune\Blueprint\Ghost\Runtime\Process;
-use Commune\Framework\RuntimeDriver\ARuntimeDriver;
+use Commune\Chatbot\Hyperf\Coms\Database\MemoryRepository;
+use Psr\Log\LoggerInterface;
+use Swoole\Coroutine;
 
-class HfRuntimeDriver extends ARuntimeDriver
+/**
+ * Hyperf 实现的 runtime driver.
+ */
+class HfRuntimeDriver extends CacheRuntimeDriver
 {
-    protected function getProcessKey(string $cloneId, string $convoId): string
+
+    /**
+     * @var string
+     */
+    protected $poolName;
+
+    /**
+     * @var string
+     */
+    protected $tableName;
+
+    /**
+     * @var int
+     */
+    protected $cacheTtl;
+
+    /**
+     * HfRuntimeDriver constructor.
+     * @param Cache $cache
+     * @param ClonerLogger $logger
+     * @param string $poolName
+     * @param string $tableName
+     */
+    public function __construct(
+        Cache $cache,
+        ClonerLogger $logger,
+        string $poolName,
+        string $tableName
+    )
     {
-        // TODO: Implement getProcessKey() method.
+        $this->poolName = $poolName;
+        $this->tableName = $tableName;
+        parent::__construct($cache, $logger);
     }
 
-    protected function doCacheProcess(string $key, Process $process, int $expire): bool
+    public function newConnection() : ConnectionInterface
     {
-        // TODO: Implement doCacheProcess() method.
+        return Db::connection($this->poolName);
     }
 
-    protected function doFetchProcess(string $key): ? Process
-    {
-        // TODO: Implement doFetchProcess() method.
-    }
-
-    protected function getSessionMemoriesCacheKey(string $cloneId, string $convoId): string
-    {
-        // TODO: Implement getSessionMemoriesCacheKey() method.
-    }
-
-    protected function doCacheSessionMemories(string $key, array $map, int $expire): bool
-    {
-        // TODO: Implement doCacheSessionMemories() method.
-    }
-
-    protected function doFetchSessionMemory(string $key, string $memoryId): ? string
-    {
-        // TODO: Implement doFetchSessionMemory() method.
-    }
 
     public function saveLongTermMemories(
-        string $clonerId,
+        string $cloneId,
         array $memories
     ): bool
     {
-        // TODO: Implement saveLongTermMemories() method.
+        if (empty($memories)) {
+            throw new SaveDataException("no memories data");
+        }
+
+        try {
+
+            $connection = $this->newConnection();
+
+            // 开启事务. 记忆部分还是必须全部保存成功, 否则请求要设置为无效.
+            $connection->beginTransaction();
+
+            $builder = $connection->table($this->tableName);
+
+            // 保存记忆是同步逻辑, 如果保存失败了需要回滚对话.
+            MemoryRepository::saveMemories(
+                $builder,
+                $memories
+            );
+
+            $connection->commit();
+
+            // 用协程来保存缓存.
+            $this->coroutineCacheLtMemories($cloneId, $memories);
+
+            return true;
+
+        } catch (\Throwable $e) {
+
+            if (isset($connection)) $connection->rollBack();
+
+            $this->logger->error($e);
+
+            return false;
+        }
     }
 
-    public function findLongTermMemories(string $clonerId, string $memoryId): ? Memory
+    protected function coroutineCacheLtMemories(
+        string $cloneId,
+        array $memories
+    ) : void
     {
-        // TODO: Implement findLongTermMemories() method.
+        Coroutine::create(
+            function(Cache $cache, string $cloneId, array $memories, LoggerInterface $logger, int $ttl) {
+
+                try {
+
+                    foreach ($memories as $memory) {
+                        /**
+                         * @var Memory $memory
+                         */
+                        $id = $memory->getId();
+                        $key = $this->getSessionMemoriesCacheKey($cloneId, $id);
+                        $se = Babel::serialize($memory);
+                        $cache->set($key, $se, $ttl);
+                    }
+                } catch (\Throwable $e) {
+                    $logger->error($e);
+                }
+            },
+            $this->cache,
+            $cloneId,
+            $memories,
+            $this->logger,
+            $this->cacheTtl
+        );
+    }
+
+    public function findLongTermMemories(string $cloneId, string $memoryId): ? Memory
+    {
+        try {
+
+            $key = $this->getSessionMemoriesCacheKey($cloneId, $memoryId);
+            $se = $this->cache->get($key);
+
+            if (!empty($se)) {
+                return Babel::unserialize($se);
+            }
+
+            $builder = $this->newConnection()->table($this->tableName);
+
+            return MemoryRepository::findMemory(
+                $builder,
+                $cloneId,
+                $memoryId
+            );
+
+        } catch (\Throwable $e) {
+            $this->logger->error($e);
+
+            throw new LoadDataException(
+                "find memory failed, clone id $cloneId, memory id $memoryId",
+                $e
+            );
+        }
     }
 
 
