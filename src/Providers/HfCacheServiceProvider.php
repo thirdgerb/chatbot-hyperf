@@ -20,7 +20,7 @@ use Hyperf\Utils\ApplicationContext;
  * @property-read string $redis     所使用的 Hyperf redis 连接.
  * @property-read string $prefix    所有缓存 key 的前缀.
  */
-class CacheByHfProvider extends ServiceProvider
+class HfCacheServiceProvider extends ServiceProvider
 {
     public function getDefaultScope(): string
     {

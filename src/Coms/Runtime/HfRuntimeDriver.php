@@ -8,23 +8,23 @@
 
 namespace Commune\Chatbot\Hyperf\Coms\Runtime;
 
-use Commune\Blueprint\Exceptions\IO\LoadDataException;
+use Swoole\Coroutine;
 use Commune\Contracts\Cache;
 use Commune\Support\Babel\Babel;
 use Hyperf\DbConnection\Db;
+use Commune\Framework\RuntimeDriver\CachableRuntimeDriver;
 use Hyperf\Database\ConnectionInterface;
-use Commune\Framework\RuntimeDriver\CacheRuntimeDriver;
 use Commune\Blueprint\Exceptions\IO\SaveDataException;
 use Commune\Blueprint\Ghost\Cloner\ClonerLogger;
 use Commune\Blueprint\Ghost\Memory\Memory;
 use Commune\Chatbot\Hyperf\Coms\Database\MemoryRepository;
+use Commune\Blueprint\Exceptions\IO\LoadDataException;
 use Psr\Log\LoggerInterface;
-use Swoole\Coroutine;
 
 /**
  * Hyperf 实现的 runtime driver.
  */
-class HfRuntimeDriver extends CacheRuntimeDriver
+class HfRuntimeDriver extends CachableRuntimeDriver
 {
 
     /**
@@ -48,16 +48,19 @@ class HfRuntimeDriver extends CacheRuntimeDriver
      * @param ClonerLogger $logger
      * @param string $poolName
      * @param string $tableName
+     * @param int $cacheTtl
      */
     public function __construct(
         Cache $cache,
         ClonerLogger $logger,
         string $poolName,
-        string $tableName
+        string $tableName,
+        int $cacheTtl
     )
     {
         $this->poolName = $poolName;
         $this->tableName = $tableName;
+        $this->cacheTtl = $cacheTtl;
         parent::__construct($cache, $logger);
     }
 

@@ -9,7 +9,7 @@
 namespace Commune\Chatbot\Hyperf\Providers;
 
 use Commune\Chatbot\Hyperf\Coms\Database\OptionRepository;
-use Commune\Chatbot\Hyperf\Coms\Storage\HfDBStorage;
+use Commune\Chatbot\Hyperf\Coms\Storage\HfDBStorageDriver;
 use Commune\Container\ContainerContract;
 use Commune\Contracts\Log\ExceptionReporter;
 use Commune\Contracts\ServiceProvider;
@@ -24,7 +24,7 @@ use Psr\Log\LoggerInterface;
  * @property-read string $tableName     所使用的数据表名称. 基于 mysql 的话.
  * @property-read string $redis         所使用的 redis 配置.
  */
-class OptionStorageByHfProvider extends ServiceProvider
+class HfOptionStorageServiceProvider extends ServiceProvider
 {
     public function getDefaultScope(): string
     {
@@ -47,7 +47,7 @@ class OptionStorageByHfProvider extends ServiceProvider
     public function register(ContainerContract $app): void
     {
         $app->singleton(
-            HfDBStorage::class,
+            HfDBStorageDriver::class,
             function(ContainerContract $app) {
 
                 $redisFactory = ApplicationContext::getContainer()
@@ -57,7 +57,7 @@ class OptionStorageByHfProvider extends ServiceProvider
                 $reporter = $app->make(ExceptionReporter::class);
 
 
-                return new HfDBStorage(
+                return new HfDBStorageDriver(
                     $redisFactory,
                     $logger,
                     $reporter,

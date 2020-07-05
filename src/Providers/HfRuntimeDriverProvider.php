@@ -18,10 +18,11 @@ use Commune\Contracts\Ghost\RuntimeDriver;
 use Commune\Contracts\ServiceProvider;
 
 /**
- * @property-read string $connection    所使用的 hyperf 数据库连接.
- * @property-read string $tableName     所使用的 hyperf 数据表名. 通常是 mysql
+ * @property-read string $connection        所使用的 hyperf 数据库连接.
+ * @property-read string $tableName         所使用的 hyperf 数据表名. 通常是 mysql
+ * @property-read int $longTermMemoryTtl
  */
-class RuntimeDriverByHfProvider extends ServiceProvider
+class HfRuntimeDriverProvider extends ServiceProvider
 {
     public function getDefaultScope(): string
     {
@@ -33,6 +34,7 @@ class RuntimeDriverByHfProvider extends ServiceProvider
         return [
             'connection' => 'default',
             'tableName' => MemoryRepository::TABLE_NAME,
+            'longTermMemoryTtl' => 60,
         ];
     }
 
@@ -53,7 +55,8 @@ class RuntimeDriverByHfProvider extends ServiceProvider
                     $cache,
                     $logger,
                     $this->connection,
-                    $this->tableName
+                    $this->tableName,
+                    $this->longTermMemoryTtl
                 );
             }
         );

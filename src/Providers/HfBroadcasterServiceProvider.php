@@ -24,7 +24,7 @@ use Commune\Chatbot\Hyperf\Coms\Broadcaster\HfRedisBroadcaster;
  * @property-read string $redis             使用 Hyperf 的哪个 Redis 连接池.
  * @property-read string[] $listeningShells 每条消息都会广播到的目标 Shell. 通常是管理员 Shell.
  */
-class BroadcastByHfRedisProvider extends ServiceProvider
+class HfBroadcasterServiceProvider extends ServiceProvider
 {
     public function getDefaultScope(): string
     {

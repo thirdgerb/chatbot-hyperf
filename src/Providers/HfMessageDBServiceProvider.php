@@ -24,7 +24,7 @@ use Commune\Container\ContainerContract;
  * @property-read string $tableName,
  * @property-read int $cacheExpire
  */
-class MessageDBByHfProvider extends ServiceProvider
+class HfMessageDBServiceProvider extends ServiceProvider
 {
     public function getDefaultScope(): string
     {

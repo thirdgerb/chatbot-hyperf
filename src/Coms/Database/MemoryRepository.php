@@ -61,7 +61,7 @@ class MemoryRepository
 
         return empty($data)
             ? null
-            : Babel::unserialize($data['memory_data']);
+            : Babel::unserialize($data->memory_data);
     }
 
 

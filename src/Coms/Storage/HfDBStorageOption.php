@@ -1,11 +1,5 @@
 <?php
 
-
-/**
- * Class HfDatabaseStorageOption
- * @package Commune\Chatbot\Hyperf\Coms\Storage
- */
-
 namespace Commune\Chatbot\Hyperf\Coms\Storage;
 
 
@@ -32,7 +26,7 @@ class HfDBStorageOption extends StorageOption
 
     public function getDriver(): string
     {
-        return HfDBStorageOption::class;
+        return HfDBStorageDriver::class;
     }
 
 

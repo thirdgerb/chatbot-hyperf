@@ -9,18 +9,19 @@
 namespace Commune\Chatbot\Hyperf\Coms\Storage;
 
 
+use Commune\Chatbot\Hyperf\Coms\Database\OptionRepository;
 use Commune\Contracts\Log\ExceptionReporter;
 use Commune\Support\Option\Option;
 use Hyperf\Database\Query\Builder;
 use Commune\Support\Registry\Meta\CategoryOption;
 use Commune\Support\Registry\Meta\StorageOption;
-use Commune\Support\Registry\Storage;
+use Commune\Support\Registry\StorageDriver;
 use Hyperf\DbConnection\Db;
 use Hyperf\Redis\Redis;
 use Hyperf\Redis\RedisFactory;
 use Psr\Log\LoggerInterface;
 
-class HfDBStorage implements Storage
+class HfDBStorageDriver implements StorageDriver
 {
 
     /**
@@ -195,7 +196,7 @@ class HfDBStorage implements Storage
 
         $builder = $this->newBuilder();
         $saved = $builder->where('uuid', '=', $id)->first(['data']);
-        $se = $saved['data'] ?? [];
+        $se = $saved->data ?? [];
 
         $option = $this->unserializeOption($se, $categoryOption->optionClass);
         if (empty($option)) {
@@ -242,16 +243,12 @@ class HfDBStorage implements Storage
         $builder = $this->newBuilder();
 
         try {
-            $success = $builder->updateOrInsert(
-                ['uuid' => $id],
-                [
-                    'uuid' => $id,
-                    'option_id' => $option->getId(),
-                    'title' => $option->getTitle(),
-                    'desc' => $option->getDescription(),
-                    'category_name' => $categoryOption->name,
-                    'data' => $se
-                ]
+            $success = OptionRepository::saveOption(
+                $builder,
+                $option,
+                $categoryOption->name,
+                $id,
+                $se
             );
 
         } catch (\Throwable $e) {
@@ -289,8 +286,7 @@ class HfDBStorage implements Storage
 
         $builder = $this->newBuilder();
 
-        $deleted = $builder->whereIn('uuid', $uuIds)->delete();
-        return $deleted;
+        return OptionRepository::deleteByUuid($builder, ...$keys);
     }
 
     public function eachOption(
@@ -315,8 +311,12 @@ class HfDBStorage implements Storage
                 ->limit(1)
                 ->first(['data']);
 
+            if (empty($data)) {
+                break;
+            }
+
             yield $this->unserializeOption(
-                $data['data'],
+                $data->data,
                 $optionClass
             );
         }
@@ -340,8 +340,8 @@ class HfDBStorage implements Storage
 
         $optionClass = $categoryOption->optionClass;
         return array_map(
-            function(array $data) use ($optionClass){
-                $se = $data['data'];
+            function(\stdClass $data) use ($optionClass){
+                $se = $data->data;
                 return $this->unserializeOption($se, $optionClass);
             },
             $collection->all()
@@ -374,8 +374,8 @@ class HfDBStorage implements Storage
             ->get(['option_id']);
 
         return array_map(
-            function(array $data) {
-                return $data['option_id'];
+            function(\stdClass $data) {
+                return $data->option_id;
             },
             $collection->all()
         );
@@ -402,7 +402,11 @@ class HfDBStorage implements Storage
                 ->limit(1)
                 ->first(['option_id']);
 
-            yield $data['option_id'];
+            if (empty($data)) {
+                break;
+            }
+
+            yield $data->option_id;
         }
     }
 
@@ -422,7 +426,7 @@ class HfDBStorage implements Storage
             ->get('option_id');
 
         return array_map(function($data) {
-            return $data['option_id'];
+            return $data->option_id;
         }, $collection->all());
     }
 
@@ -435,8 +439,7 @@ class HfDBStorage implements Storage
 
         $categoryName = $categoryOption->name;
 
-        $builder->where('category_name', '=', $categoryName)
-            ->delete();
+        $builder->where('category_name', '=', $categoryName)->delete();
 
         return true;
     }
