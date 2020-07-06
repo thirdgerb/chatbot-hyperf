@@ -9,6 +9,7 @@
 namespace Commune\Chatbot\Hyperf\Coms\MessageDB;
 
 
+use Carbon\Carbon;
 use Commune\Blueprint\Exceptions\IO\LoadDataException;
 use Commune\Blueprint\Exceptions\IO\SaveDataException;
 use Commune\Chatbot\Hyperf\Coms\Database\MessageRepository;
@@ -63,7 +64,9 @@ class HfMysqlMessageDB extends AbsMessageDB
 
         foreach ($outputs as $output) {
 
-            $message = [
+            $message = $output->getMessage();
+
+            $data = [
                 'message_id' => $output->getMessageId(),
                 'trace_id' => $traceId,
                 'batch_id' => $output->getBatchId(),
@@ -74,13 +77,13 @@ class HfMysqlMessageDB extends AbsMessageDB
                 'creator_id' => $output->getCreatorId(),
                 'creator_name' => $output->getCreatorName(),
                 'message' => Babel::serialize($output->getMessage()),
-                'created_at' => $output->getCreatedAt(),
-                'deliver_at' => $output->getDeliverAt(),
+
+                'deliver_at' => Carbon::createFromTimestamp($output->getDeliverAt())->toDateTimeString(),
+                'created_at' => Carbon::createFromTimestamp($output->getCreatedAt())->toDateTimeString(),
             ];
 
-            $messages[] = $message;
+            $messages[] = $data;
         }
-
 
         try {
 
@@ -92,8 +95,8 @@ class HfMysqlMessageDB extends AbsMessageDB
         } catch (\Throwable $e) {
             $this->logger->error($e);
 
-            foreach ($messages as $message) {
-                $this->logger->notice('unsaved message : '. json_encode($message));
+            foreach ($messages as $data) {
+                $this->logger->notice('unsaved message : '. json_encode($data));
             }
 
             throw new SaveDataException(

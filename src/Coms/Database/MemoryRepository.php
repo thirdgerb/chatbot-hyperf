@@ -26,8 +26,6 @@ class MemoryRepository
 
         $table->binary('memory_data')->comment('记忆体的内容');
 
-        $table->timestamps();
-
         $table->unique('memory_id');
     }
 

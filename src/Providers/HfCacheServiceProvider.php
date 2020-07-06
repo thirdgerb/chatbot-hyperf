@@ -11,6 +11,7 @@ namespace Commune\Chatbot\Hyperf\Providers;
 
 use Commune\Chatbot\Hyperf\Coms\Cache\HfRedisCache;
 use Commune\Container\ContainerContract;
+use Commune\Contracts\Cache;
 use Commune\Contracts\ServiceProvider;
 use Hyperf\Redis\RedisFactory;
 use Hyperf\Utils\ApplicationContext;
@@ -42,7 +43,7 @@ class HfCacheServiceProvider extends ServiceProvider
     public function register(ContainerContract $app): void
     {
         $app->singleton(
-            ContainerContract::class,
+            Cache::class,
             function (ContainerContract $app) {
 
                 $factory = ApplicationContext::getContainer()->get(RedisFactory::class);

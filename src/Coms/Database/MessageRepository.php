@@ -140,7 +140,7 @@ class MessageRepository
             $builder = $builder->limit($condition->limit);
         }
 
-        $builder->orderBy('message_id', 'desc');
+        $builder->orderBy('id', 'desc');
         return $builder;
     }
 
@@ -217,8 +217,8 @@ class MessageRepository
             'creator_id' => $message->getCreatorId(),
             'creator_name' => $message->getCreatorName(),
 
-            'deliver_at' => $message->getDeliverAt(),
-            'created_at' => $message->getCreatedAt(),
+            'deliver_at' => Carbon::createFromTimestamp($message->getDeliverAt()),
+            'created_at' => Carbon::createFromTimestamp($message->getCreatedAt()),
 
             'message_data' => Babel::serialize($message->getMessage()),
         ];
@@ -243,7 +243,7 @@ class MessageRepository
         SchemaHelper::uuidField($table, 'message_id')
             ->comment('消息ID. ');
 
-        SchemaHelper::idField($table, 'traceId_id')
+        SchemaHelper::idField($table, 'trace_id')
             ->comment('服务化调用的追踪ID');
 
         SchemaHelper::uuidField($table, 'batch_id')
