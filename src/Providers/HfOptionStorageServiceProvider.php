@@ -1,11 +1,5 @@
 <?php
 
-
-/**
- * Class OptRegistryByDBProvider
- * @package Commune\Chatbot\Hyperf\Providers
- */
-
 namespace Commune\Chatbot\Hyperf\Providers;
 
 use Commune\Chatbot\Hyperf\Coms\Database\OptionRepository;
