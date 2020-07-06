@@ -18,6 +18,63 @@ class OptionRepository
     const TABLE_NAME = 'options';
 
 
+    public static function uuidExists(
+        Builder $builder,
+        string $uuid
+    ) : bool
+    {
+        return $builder->where('uuid', '=', $uuid)->exists();
+    }
+
+    /**
+     * @param Builder $builder
+     * @param string $uuid
+     * @param array $columns
+     * @return null|\stdClass
+     */
+    public static function findOptionByUuid(
+        Builder $builder,
+        string $uuid,
+        array $columns = ['*']
+    ) : ? \stdClass
+    {
+        return $builder->where('uuid', '=', $uuid)->first($columns);
+    }
+
+    /**
+     * @param Builder $builder
+     * @param string $cateName
+     * @param int $offset
+     * @param int $limit
+     * @param string[] $columns
+     * @return \stdClass[]
+     */
+    public static function paginateCategory(
+        Builder $builder,
+        string $cateName,
+        int $offset,
+        int $limit,
+        array $columns = ['*']
+    ) : array
+    {
+        $collection = $builder
+            ->where('category_name', '=', $cateName)
+            ->orderBy('id', 'desc')
+            ->offset($offset)
+            ->limit($limit)
+            ->get($columns);
+
+        return $collection->all();
+    }
+
+    public static function countCategory(
+        Builder $builder,
+        string $cateName
+    ) : int
+    {
+        return $builder->where('category_name', '=', $cateName)->count();
+    }
+
     public static function deleteByUuid(
         Builder $builder,
         string ...$uuids
@@ -34,7 +91,6 @@ class OptionRepository
         string $serialized
     ) : bool
     {
-        $now = time();
         return $builder->updateOrInsert(
             ['uuid' => $uuid],
             [

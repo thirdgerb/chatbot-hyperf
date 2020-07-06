@@ -60,42 +60,59 @@ class StartAppCommand extends HyperfCommand
         $this->addArgument('platform', InputOption::VALUE_REQUIRED, 'platform name');
 
         $this->addOption(
+            'reset',
+            'r',
+            InputOption::VALUE_NONE,
+            'Reset ghost mind set, flush all saved logic'
+        );
+
+        $this->addOption(
             'debug',
             'd',
             InputOption::VALUE_NONE,
-            'set debug mode'
+            'Enable Commune debug mode'
         );
     }
 
     public function handle()
     {
         $host = $this->prepareHost();
-        $console = $host->getConsoleLogger();
 
         $platformName = $this->input->getArgument('platform') ?? '';
 
+        $error = false;
         if (empty($platformName)) {
-            $console->error("platform name is required");
-            return;
+            $this->error("argument [platform] is required");
+            $error = true;
         }
 
         $config = $host->getConfig();
         $platformConfig = $config->getPlatformConfig($platformName);
 
-        if (empty($platformConfig)) {
+        if (!$error && empty($platformConfig)) {
 
-            $str = "platform $platformName not exists!\n";
-            $str .= "available : \n";
+            $str = "platform [$platformName] not exists!\n";
+            $this->error($str);
+            $error = true;
+        }
 
+        if ($error) {
+            $this->info("available platforms: \n");
+            $rows = [];
             foreach ($config->platforms as $platformConfig) {
                 $id = $platformConfig->getId();
                 $title = $platformConfig->getTitle();
                 $desc = $platformConfig->getDescription();
 
-                $str .= "[$id] $title: $desc";
+                $rows[] = [$id, $title, $desc];
             }
 
-            $console->error($str);
+            $this->table(
+                ['id', 'title', 'desc'],
+                $rows
+            );
+
+            $this->info('use [id] as argument [platform] to boot platform. use -h for more help');
             return;
         }
 
@@ -149,10 +166,12 @@ class StartAppCommand extends HyperfCommand
 
     protected function prepareEnv()  :void
     {
-        CommuneEnv::defineResetMind(true);
+        $resetMind = $this->input->getOption('reset') ?? false;
+        CommuneEnv::defineResetMind($resetMind);
 
         CommuneEnv::defineBathPath(BASE_PATH . "/commune");
         CommuneEnv::defineResourcePath(BASE_PATH . "/commune/resources");
+        CommuneEnv::defineLogPath(BASE_PATH . '/runtime/logs');
 
         $debug = $this->input->getOption('debug') ?? false;
         CommuneEnv::defineDebug($debug);

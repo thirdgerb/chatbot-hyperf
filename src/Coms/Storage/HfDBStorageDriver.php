@@ -165,16 +165,15 @@ class HfDBStorageDriver implements StorageDriver
         string $optionId
     ): bool
     {
-
-        $id = static::makeCategoryId($categoryOption, $optionId);
+        $uuid = static::makeCategoryId($categoryOption, $optionId);
 
         $redis = $this->newRedis();
-        if ($redis->exists($id)) {
+        if ($redis->exists($uuid)) {
             return true;
         }
 
         $builder = $this->newBuilder();
-        return $builder->where('uuid', '=', $id)->exists();
+        return OptionRepository::uuidExists($builder, $uuid);
     }
 
     public function find(
@@ -183,20 +182,28 @@ class HfDBStorageDriver implements StorageDriver
         string $optionId
     ): ? Option
     {
-        $id = static::makeCategoryId($categoryOption, $optionId);
+        $uuid = static::makeCategoryId($categoryOption, $optionId);
         $optionClass = $categoryOption->optionClass;
 
         $redis = $this->newRedis();
-        $key = $this->getOptionCacheKey($id);
+        $key = $this->getOptionCacheKey($uuid);
 
         $se = $redis->get($key);
         if (!empty($se)) {
             return $this->unserializeOption($se, $optionClass);
         }
 
-        $builder = $this->newBuilder();
-        $saved = $builder->where('uuid', '=', $id)->first(['data']);
-        $se = $saved->data ?? [];
+        $saved = OptionRepository::findOptionByUuid(
+            $this->newBuilder(),
+            $uuid,
+            ['data']
+        );
+
+        if (empty($saved)) {
+            return null;
+        }
+
+        $se = $saved->data;
 
         $option = $this->unserializeOption($se, $categoryOption->optionClass);
         if (empty($option)) {
@@ -204,7 +211,7 @@ class HfDBStorageDriver implements StorageDriver
         }
 
         if ($storageOption instanceof HfDBStorageOption) {
-            $this->cacheOption($id, $se, $storageOption);
+            $this->cacheOption($uuid, $se, $storageOption);
         }
 
         return $option;
@@ -296,32 +303,35 @@ class HfDBStorageDriver implements StorageDriver
     {
         $builder = $this->newBuilder();
 
-        $name = $categoryOption->name;
+        $cateName = $categoryOption->name;
         $optionClass = $categoryOption->optionClass;
 
-        $count = $builder->where('category_name', '=', $name)->count();
+        $count = OptionRepository::countCategory($builder, $cateName);
+        unset($builder);
 
         $i = 0;
         while ($i < $count) {
+            unset($builder);
 
-            $data = $builder
-                ->where('category_name', '=', $name)
-                ->orderBy('created_at', 'desc')
-                ->offset($i)
-                ->limit(1)
-                ->first(['data']);
+            $data = OptionRepository::paginateCategory(
+                $builder = $this->newBuilder(),
+                $cateName,
+                $i,
+                1,
+                ['data']
+            );
 
             if (empty($data)) {
                 break;
             }
 
             yield $this->unserializeOption(
-                $data->data,
+                $data[0]->data,
                 $optionClass
             );
         }
-
     }
+
 
     public function findByIds(
         CategoryOption $categoryOption,
@@ -387,26 +397,26 @@ class HfDBStorageDriver implements StorageDriver
     ): \Generator
     {
         $builder = $this->newBuilder();
+        $cateName = $categoryOption->name;
 
-        $name = $categoryOption->name;
-
-        $count = $builder->where('category_name', '=', $name)->count();
-
+        $count = OptionRepository::countCategory($builder, $cateName);
         $i = 0;
         while ($i < $count) {
 
-            $data = $builder
-                ->where('category_name', '=', $name)
-                ->orderBy('created_at', 'desc')
-                ->offset($i)
-                ->limit(1)
-                ->first(['option_id']);
+            $data = OptionRepository::paginateCategory(
+                $this->newBuilder(),
+                $cateName,
+                $i,
+                1,
+                ['option_id']
+            );
 
             if (empty($data)) {
                 break;
             }
 
-            yield $data->option_id;
+            yield $data[0]->option_id;
+            $i ++;
         }
     }
 
@@ -417,17 +427,20 @@ class HfDBStorageDriver implements StorageDriver
         int $limit = 20
     ): array
     {
-        $name = $categoryOption->name;
+        $cateName = $categoryOption->name;
         $builder = $this->newBuilder();
 
-        $collection = $builder
-            ->where('category_name', '=', $name)
-            ->orderBy('created_at', 'desc')
-            ->get('option_id');
+        $data = OptionRepository::paginateCategory(
+            $builder,
+            $cateName,
+            $offset,
+            $limit,
+            ['option_id']
+        );
 
         return array_map(function($data) {
             return $data->option_id;
-        }, $collection->all());
+        }, $data);
     }
 
     public function flush(
