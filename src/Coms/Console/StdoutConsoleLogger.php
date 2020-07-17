@@ -10,6 +10,8 @@ namespace Commune\Chatbot\Hyperf\Coms\Console;
 
 
 use Commune\Blueprint\CommuneEnv;
+use Commune\Framework\Log\IConsoleLogger;
+use Hyperf\Framework\Logger\StdoutLogger;
 use Psr\Log\LoggerTrait;
 use Psr\Log\LogLevel;
 use Hyperf\Contract\StdoutLoggerInterface;
@@ -37,13 +39,7 @@ class StdoutConsoleLogger implements ConsoleLogger
 
     public function log($level, $message, array $context = array())
     {
-        if (
-            $level == LogLevel::DEBUG
-            && CommuneEnv::isDebug() === false
-        ) {
-            return;
-        }
-
+        $message = IConsoleLogger::wrapMessage($level, $message);
         $this->logger->log($level, strval($message), $context);
     }
 }

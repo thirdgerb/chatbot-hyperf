@@ -3,13 +3,14 @@
 namespace Commune\Chatbot\Hyperf\Providers;
 
 
+use Hyperf;
 use Commune\Container\ContainerContract;
 use Commune\Contracts\ServiceProvider;
-use Hyperf\Redis\RedisFactory;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Hyperf\Utils\ApplicationContext;
 
 /**
- * 将 Hyperf 容器里的对象注册到 Commune 容器
+ * 将 Hyperf 容器里的对象预注册到 Commune 容器
  *
  * @property-read string[] $singletons
  */
@@ -25,7 +26,16 @@ class HyperfDIBridgeServiceProvider extends ServiceProvider
         return [
 
             'singletons' => [
-                RedisFactory::class,
+                // redis 工厂.
+                Hyperf\Redis\RedisFactory::class,
+                // server 端.
+                Hyperf\Server\ServerFactory::class,
+                // hyperf 的配置中心.
+                Hyperf\Contract\ConfigInterface::class,
+                // hyperf 自己的控制台.
+                Hyperf\Contract\StdoutLoggerInterface::class,
+                // 事件
+                EventDispatcherInterface::class,
             ],
         ];
     }

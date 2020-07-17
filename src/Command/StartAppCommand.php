@@ -8,28 +8,21 @@
 
 namespace Commune\Chatbot\Hyperf\Command;
 
-use Commune\Blueprint\CommuneEnv;
-use Commune\Blueprint\Configs\HostConfig;
-use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Blueprint\Host;
-use Commune\Chatbot\Hyperf\Coms\Console\SymfonyStyleConsole;
-use Commune\Chatbot\Hyperf\Config\HfHostConfig;
-use Commune\Chatbot\Hyperf\Foundation\HfProcessContainer;
-use Commune\Contracts\Log\ConsoleLogger;
-use Commune\Contracts\Log\ExceptionReporter;
-use Commune\Framework\ExpReporter\ConsoleExceptionReporter;
-use Commune\Host\IHost;
-use Commune\Platform\IPlatformConfig;
-use Commune\Support\Utils\StringUtils;
-use Hyperf\Command\Command as HyperfCommand;
+use Commune\Blueprint\CommuneEnv;
+use Hyperf\Utils\ApplicationContext;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
 
 /**
+ * 在 Hyperf 中启动 Commune Host.
  */
-class StartAppCommand extends HyperfCommand
+class StartAppCommand extends Command
 {
 
     /**
@@ -37,16 +30,12 @@ class StartAppCommand extends HyperfCommand
      */
     protected $container;
 
-    protected $coroutine = false;
-
     /**
-     * StartApp constructor.
-     * @param ContainerInterface $container
+     * StartAppCommand constructor.
      */
-    public function __construct(ContainerInterface $container)
+    public function __construct()
     {
-        $this->container = $container;
-
+        $this->container = ApplicationContext::getContainer();
         parent::__construct('commune:start');
 
     }
@@ -74,15 +63,26 @@ class StartAppCommand extends HyperfCommand
         );
     }
 
-    public function handle()
-    {
-        $host = $this->prepareHost();
 
-        $platformName = $this->input->getArgument('platform') ?? '';
+    protected function execute(
+        InputInterface $input,
+        OutputInterface $output
+    )
+    {
+        $this->prepareEnv($input);
+
+        $container = ApplicationContext::getContainer();
+        $host = $this->prepareHost(
+            $container,
+            $input,
+            $output
+        );
+
+        $platformName = $input->getArgument('platform') ?? '';
 
         $error = false;
         if (empty($platformName)) {
-            $this->error("argument [platform] is required");
+            $this->error($output, "argument [platform] is required");
             $error = true;
         }
 
@@ -91,13 +91,13 @@ class StartAppCommand extends HyperfCommand
 
         if (!$error && empty($platformConfig)) {
 
-            $str = "platform [$platformName] not exists!\n";
-            $this->error($str);
+            $str = "platform [$platformName] not exists!";
+            $this->error($output, $str);
             $error = true;
         }
 
         if ($error) {
-            $this->info("available platforms: \n");
+            $output->writeln("available platforms: \n");
             $rows = [];
             foreach ($config->platforms as $platformConfig) {
                 $id = $platformConfig->getId();
@@ -108,73 +108,82 @@ class StartAppCommand extends HyperfCommand
             }
 
             $this->table(
+                $output,
                 ['id', 'title', 'desc'],
                 $rows
             );
 
-            $this->info('use [id] as argument [platform] to boot platform. use -h for more help');
-            return;
+            $output->writeln('use [id] as argument [platform] to boot platform. use -h for more help');
+            return SIGTERM;
         }
 
         $host->run($platformName);
+
+        return 0;
     }
 
 
-    protected function prepareHost() : Host
+    protected function prepareHost(
+        ContainerInterface $container,
+        InputInterface $input,
+        OutputInterface $output
+    ) : Host
     {
-        $this->prepareEnv();
-        $container = $this->prepareContainer();
-        $console = $this->prepareConsole();
-        $config = $this->prepareConfig();
+        /**
+         * @var Host $host
+         */
+        $host = $container->get(Host::class);
 
-        $host = new IHost(
-            $config,
-            $container,
-            null,
-            null,
-            $console
-        );
-
+        $host->instance(StartAppCommand::class, $this);
+        $host->instance(InputInterface::class, $input);
+        $host->instance(SymfonyStyle::class, $output);
         return $host;
     }
 
-    protected function prepareConfig() : HostConfig
+    protected function error(OutputInterface $output, string $message) : void
     {
-        $file = StringUtils::gluePath(BASE_PATH, 'commune/config/host.php');
-
-        $hostConfig = include $file;
-        return $hostConfig instanceof HostConfig
-            ? $hostConfig
-            : new HfHostConfig($hostConfig);
+        $output->writeln("<error>$message</error>");
     }
 
-    protected function prepareConsole() : ConsoleLogger
+    protected function prepareEnv(InputInterface $input)  :void
     {
-        return new SymfonyStyleConsole($this->output);
-    }
-
-    protected function prepareContainer() : ProcContainer
-    {
-        $container = new HfProcessContainer($this->container);
-
-        $container->instance(StartAppCommand::class, $this);
-        $container->instance(InputInterface::class, $this->input);
-        $container->instance(SymfonyStyle::class, $this->output);
-
-        return $container;
-    }
-
-    protected function prepareEnv()  :void
-    {
-        $resetMind = $this->input->getOption('reset') ?? false;
+        $resetMind = $input->getOption('reset') ?? false;
         CommuneEnv::defineResetMind($resetMind);
 
         CommuneEnv::defineBathPath(BASE_PATH . "/commune");
         CommuneEnv::defineResourcePath(BASE_PATH . "/commune/resources");
         CommuneEnv::defineLogPath(BASE_PATH . '/runtime/logs');
 
-        $debug = $this->input->getOption('debug') ?? false;
+        $debug = $input->getOption('debug') ?? false;
         CommuneEnv::defineDebug($debug);
     }
 
+
+    /**
+     * Format input to textual table.
+     *
+     * @param OutputInterface $output
+     * @param array $headers
+     * @param $rows
+     * @param string $tableStyle
+     * @param array $columnStyles
+     */
+    public function table(
+        OutputInterface $output,
+        array $headers,
+        array $rows,
+        string $tableStyle = 'default',
+        array $columnStyles = []
+    ): void
+    {
+        $table = new Table($output);
+
+        $table->setHeaders((array) $headers)->setRows($rows)->setStyle($tableStyle);
+
+        foreach ($columnStyles as $columnIndex => $columnStyle) {
+            $table->setColumnStyle($columnIndex, $columnStyle);
+        }
+
+        $table->render();
+    }
 }

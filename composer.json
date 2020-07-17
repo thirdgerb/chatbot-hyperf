@@ -23,7 +23,11 @@
         "hyperf/framework": "~2.0.0",
         "hyperf/redis": "~2.0.0",
         "hyperf/command": "~2.0.0",
-        "hyperf/db-connection": "~2.0.0"
+        "hyperf/db-connection": "~2.0.0",
+        "hyperf/server": "^2.0",
+        "hyperf/contract": "^2.0",
+        "psr/event-dispatcher": "^1.0",
+        "hyperf/socketio-server": "^2.0"
     },
     "require-dev": {
         "swoft/swoole-ide-helper": "^4.4"

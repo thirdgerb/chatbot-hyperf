@@ -2,11 +2,15 @@
 
 namespace Commune\Chatbot\Hyperf;
 
-
 use Commune\Chatbot\Hyperf\Command\StartAppCommand;
 
 class ConfigProvider
 {
+    protected $migrations = [
+        'memories' => '2020_07_05_0_create_memories_table.php',
+        'messages' => '2020_07_05_0_create_messages_table.php',
+        'options' => '2020_07_05_0_create_options_table.php',
+    ];
 
     public function __invoke() : array
     {
@@ -15,27 +19,30 @@ class ConfigProvider
                 StartAppCommand::class,
             ],
 
-            'publish' => [
-                [
-                    'id' => 'memories table',
-                    'description' => 'migrations for memories',
-                    'source' => __DIR__ . '/../publish/migraitons/2020_07_05_0_create_memories_table.php',
-                    'destination' => BASE_PATH . '/migrations/2020_07_05_0_create_memories_table.php'
-                ],
-                [
-                    'id' => 'messages table',
-                    'description' => 'migration for messages',
-                    'source' => __DIR__ . '/../publish/migraitons/2020_07_05_0_create_messages_table.php',
-                    'destination' => BASE_PATH . '/migrations/2020_07_05_0_create_messages_table.php'
-                ],
-                [
-                    'id' => 'options table',
-                    'description' => 'migration for options',
-                    'source' => __DIR__ . '/../publish/migraitons/2020_07_05_0_create_options_table.php',
-                    'destination' => BASE_PATH . '/migrations/2020_07_05_0_create_options_table.php'
-                ],
+            'dependencies' => [
+                // Host::class => HostFactory::class,
+                // HostConfig::class => HostConfigFactory::class,
             ],
+
+            'publish' => $this->migrations,
         ];
+    }
+
+    protected function getMigrations(): array
+    {
+
+        $migrations = [];
+        foreach ($this->migrations as $name => $file) {
+            $migrations[] = [
+                'id' => "$name table",
+                'description' => "migration for $name",
+                'source' => __DIR__ . "/../publish/migraitons/$file",
+                'destination' => BASE_PATH . "/migrations/$file",
+
+            ];
+        }
+
+        return $migrations;
     }
 
 }
