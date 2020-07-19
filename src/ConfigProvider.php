@@ -3,6 +3,8 @@
 namespace Commune\Chatbot\Hyperf;
 
 use Commune\Chatbot\Hyperf\Command\StartAppCommand;
+use Commune\Chatbot\Hyperf\Hacks\Websocket\HfWebsocketServer;
+use Commune\Chatbot\Hyperf\Hacks\Websocket\HfWebsocketServerFactory;
 
 class ConfigProvider
 {
@@ -22,6 +24,7 @@ class ConfigProvider
             'dependencies' => [
                 // Host::class => HostFactory::class,
                 // HostConfig::class => HostConfigFactory::class,
+                HfWebsocketServer::class => HfWebsocketServerFactory::class,
             ],
 
             'publish' => $this->migrations,

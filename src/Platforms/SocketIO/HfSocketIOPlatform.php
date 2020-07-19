@@ -3,7 +3,12 @@
 namespace Commune\Chatbot\Hyperf\Platforms\SocketIO;
 
 
+use Commune\Support\Utils\StringUtils;
+use FastRoute\Dispatcher;
 use Hyperf\Contract\ConfigInterface;
+use Hyperf\HttpServer\Router\DispatcherFactory;
+use Hyperf\HttpServer\Router\Router;
+use Hyperf\SocketIOServer\SocketIO;
 use Hyperf\Utils\ApplicationContext;
 use Hyperf\SocketIOServer\Collector\SocketIORouter;
 use Hyperf\SocketIOServer\Room\AdapterInterface;
@@ -49,13 +54,22 @@ class HfSocketIOPlatform extends AbsHyperfServerPlatform
         $config->set('dependencies', $data);
 
 
-        // 设置路由.
-        $routes = $option->routes;
-        foreach ($routes as $namespace => $controller) {
-            SocketIORouter::addNamespace(
-                $namespace,
-                $controller
-            );
+        $path = $option->path;
+        /**
+         * @var DispatcherFactory $factory
+         * @var Dispatcher $router
+         */
+        $factory = $container->get(DispatcherFactory::class);
+        foreach ($option->servers as $serverOption) {
+            $router = $factory->getRouter($serverOption->name);
+            $router->addRoute('GET', $path, SocketIO::class);
+        }
+
+        $controller = $option->controller;
+        SocketIORouter::addNamespace('/', $controller);
+        $namespaces = $option->namespaces;
+        foreach ($namespaces as $nsp => $controller) {
+            SocketIORouter::addNamespace($nsp, $controller);
         }
     }
 

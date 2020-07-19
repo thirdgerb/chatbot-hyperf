@@ -4,6 +4,8 @@
 namespace Commune\Chatbot\Hyperf\Servers;
 
 
+use Hyperf\Contract\ConfigInterface;
+use Hyperf\Utils\ApplicationContext;
 use Swoole\Runtime;
 use Swoole\Coroutine;
 use Psr\Log\LoggerInterface;
@@ -51,6 +53,7 @@ abstract class AbsHyperfServerPlatform extends AbsPlatform
     )
     {
         $this->shell = $shell;
+        $this->container = ApplicationContext::getContainer();
         parent::__construct($host, $config, $logger);
     }
 
@@ -59,12 +62,57 @@ abstract class AbsHyperfServerPlatform extends AbsPlatform
 
     abstract public function getHyperfPlatformOption() : HfPlatformOption;
 
+    /**
+     * 由于 Hyperf 自身是微服务框架
+     * 而 Commune Studio 是全栈式的, 要通过 hyperf 开启若干个端.
+     * 因此许多 Hyperf 的单点配置策略在这里都要改变为可以任意配置的. 因此有这个环节.
+     */
+    protected function hackHyperf() : void
+    {
+        $option = $this->getHyperfPlatformOption();
+        /**
+         * @var ConfigInterface $config
+         */
+        $config = ApplicationContext::getContainer()->get(ConfigInterface::class);
+
+        foreach ($option->servers as $server) {
+            $this->hackMiddleware($config, $server);
+            $this->hackExceptionHandlers($config, $server);
+        }
+    }
+
+    protected function hackExceptionHandlers(ConfigInterface $config, HfServerOption $option) : void
+    {
+        $hacks = $option->exceptionHandlers;
+        if (is_null($hacks)) {
+            return;
+        }
+
+        $serverName = $option->name;
+        // 按 hyperf 的规范设置异常处理.
+        $key = 'exceptions.handler.' . $serverName;
+        $config->set($key, $hacks);
+    }
+
+    protected function hackMiddleware(ConfigInterface $config, HfServerOption $option)  : void
+    {
+        $hacks = $option->middelware;
+        if (is_null($hacks)) {
+            return;
+        }
+
+        // 设置 middleware 的中间件.
+        $serverName = $option->name;
+        $key = 'middlewares.' . $serverName;
+        $config->set($key, $hacks);
+    }
 
     public function serve(): void
     {
         // 环境检查.
         $this->checkEnvironment();
 
+        $this->hackHyperf();
         $this->initializeHyperf();
 
         $console = $this->host->getConsoleLogger();
@@ -80,14 +128,17 @@ abstract class AbsHyperfServerPlatform extends AbsPlatform
             ->setLogger($console);
 
         // 初始化配置.
-        $serverConfig = $this->getHyperfPlatformOption()->toServerConfigArray();
+        $serverConfig = $this
+            ->getHyperfPlatformOption()
+            ->toServerConfigArray();
+
         $serverFactory->configure($serverConfig);
 
         Runtime::enableCoroutine(true, swoole_hook_flags());
 
         $this->server = $serverFactory->getServer();
 
-        $this->server->start();
+        $serverFactory->start();
     }
 
     public function shutdown(): void

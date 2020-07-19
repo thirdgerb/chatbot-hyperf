@@ -11,7 +11,8 @@
     ],
     "autoload": {
         "psr-4": {
-            "Commune\\Chatbot\\Hyperf\\": "src/"
+            "Commune\\Chatbot\\Hyperf\\": "src/",
+            "Commune\\Chatlog\\": "chatlog/"
         }
     },
     "minimum-stability": "dev",

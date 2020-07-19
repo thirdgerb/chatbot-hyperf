@@ -35,7 +35,6 @@ class HfSocketIOPlatformConfig extends IPlatformConfig
                     'processes' => [],
                     'settings' => [],
                     'routes' => [
-
                     ],
                 ],
             ],
