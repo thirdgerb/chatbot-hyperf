@@ -4,19 +4,45 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
-use Commune\Chatlog\ChatlogConfig;
+use Commune\Blueprint\Shell;
+use Commune\Blueprint\Framework\Auth\Supervise;
 use Commune\Chatlog\SocketIO\Blueprint\EventHandler;
+use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Protocal\SignInfo;
 use Commune\Chatlog\SocketIO\Protocal\Login;
 use Commune\Chatlog\SocketIO\Protocal\SioRequest;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Contracts\Log\ExceptionReporter;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
-use Lcobucci\JWT\Builder;
-use Lcobucci\JWT\Signer\Rsa\Sha256;
+
+use Commune\Chatlog\SocketIO\Middleware\TokenAuthorizePipe;
+use Psr\Log\LoggerInterface;
+
 
 class SignHandler extends EventHandler
 {
+    protected $middlewares = [
+        TokenAuthorizePipe::class,
+    ];
+
+
+    /**
+     * @var JwtFactory
+     */
+    protected $jwtFactory;
+
+    public function __construct(
+        JwtFactory $factory,
+        Shell $shell,
+        LoggerInterface $logger,
+        ExceptionReporter $reporter
+    )
+    {
+        $this->jwtFactory = $factory;
+        parent::__construct($shell, $logger, $reporter);
+    }
+
     function handle(
         SioRequest $request,
         BaseNamespace $controller,
@@ -37,7 +63,7 @@ class SignHandler extends EventHandler
                 'token' => $this->makeToken($user)
             ]);
 
-            // 发送消息.
+            // 发送已登录的消息.
             $response = $request->makeResponse($login);
             $socket->emit($response->event, $response->toEmit());
 
@@ -51,22 +77,7 @@ class SignHandler extends EventHandler
 
     protected function makeToken(UserInfo $user) : string
     {
-        /**
-         * @var ChatlogConfig $config
-         */
-        $config = $this->container->make(ChatlogConfig::class);
-
-        $signer = new Sha256();
-        $time = time();
-        $token = (new Builder())
-            ->issuedBy($this->shell->getId())
-            ->permittedFor($user->name)
-            ->identifiedBy($user->id, true)
-            ->issuedAt($time)
-            ->expiresAt($time + 86400 * 2) // Configures the expiration time of the token (exp claim)
-            ->getToken($signer, $config->jwtSecret); // Retrieves the generated token
-
-        return (string) $token;
+        return (string) $this->jwtFactory->issueToken($user);
     }
 
     protected function createGuest(string $uuid, string $name) : UserInfo
@@ -74,8 +85,7 @@ class SignHandler extends EventHandler
         return new UserInfo([
             'id' => $uuid,
             'name' => $name,
-            'authorized' => false,
-            'supervise' => false,
+            'level' => Supervise::GUEST,
         ]);
     }
 

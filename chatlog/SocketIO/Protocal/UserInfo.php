@@ -4,14 +4,13 @@
 namespace Commune\Chatlog\SocketIO\Protocal;
 
 
+use Commune\Blueprint\Framework\Auth\Supervise;
 use Commune\Support\Message\AbsMessage;
 
 /**
  * @property-read string $id
  * @property-read string $name
- * @property-read string $token
- * @property-read bool $authorized
- * @property-read bool $supervise
+ * @property-read int $level
  */
 class UserInfo extends AbsMessage
 {
@@ -21,9 +20,7 @@ class UserInfo extends AbsMessage
         return [
             'id' => '',
             'name' => '',
-            'token' => '',
-            'authorized' => false,
-            'supervise' => false,
+            'level' => Supervise::GUEST,
         ];
     }
 

@@ -12,6 +12,9 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine;
 
+/**
+ * 异步广播消息.
+ */
 class AsyncMessageProcess extends AbstractProcess
 {
     /**

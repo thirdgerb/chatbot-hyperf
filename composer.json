@@ -15,6 +15,12 @@
             "Commune\\Chatlog\\": "chatlog/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Commune\\Chatbot\\Hyperf\\Test\\": "test/hyperf/",
+            "Commune\\Chatlog\\Test\\": "test/chatlog/"
+        }
+    },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {

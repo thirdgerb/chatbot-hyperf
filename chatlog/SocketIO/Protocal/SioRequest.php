@@ -38,6 +38,12 @@ class SioRequest extends AbsMessage implements HasIdGenerator
             ?? parent::validate($data);
     }
 
+    public function withUser(UserInfo $user) : SioRequest
+    {
+        $this->_data['user'] = $user;
+        return $this;
+    }
+
     public function makeResponse(ResponseProtocal $protocal) : SioResponse
     {
         return new SioResponse([

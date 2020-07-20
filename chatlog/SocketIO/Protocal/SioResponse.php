@@ -6,6 +6,7 @@ namespace Commune\Chatlog\SocketIO\Protocal;
 
 use Commune\Blueprint\Exceptions\CommuneErrorCode;
 use Commune\Support\Message\AbsMessage;
+use Hyperf\SocketIOServer\Socket;
 
 /**
  * @property-read string $event
@@ -39,6 +40,11 @@ class SioResponse extends AbsMessage implements CommuneErrorCode
         $data = $this->toArray();
         unset($data['event']);
         return $data;
+    }
+
+    public function emit(Socket $socket) : void
+    {
+        $socket->emit($this->event, $this->toEmit());
     }
 
 

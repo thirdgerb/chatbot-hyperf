@@ -6,6 +6,7 @@ namespace Commune\Chatlog\SocketIO\Blueprint;
 use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Blueprint\Host;
 use Commune\Blueprint\Shell;
+use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SioRequest;
 use Commune\Contracts\Log\ConsoleLogger;
 use Commune\Contracts\Log\ExceptionReporter;
@@ -40,11 +41,6 @@ abstract class EventHandler implements HasIdGenerator
     /*---- 依赖注入 ----*/
 
     /**
-     * @var Host
-     */
-    protected $host;
-
-    /**
      * @var Shell
      */
     protected $shell;
@@ -71,19 +67,16 @@ abstract class EventHandler implements HasIdGenerator
 
     /**
      * EventHandler constructor.
-     * @param Host $host
      * @param Shell $shell
      * @param LoggerInterface $logger
      * @param ExceptionReporter $reporter
      */
     public function __construct(
-        Host $host,
         Shell $shell,
         LoggerInterface $logger,
         ExceptionReporter $reporter
     )
     {
-        $this->host = $host;
         $this->shell = $shell;
         $this->console = $shell->getConsoleLogger();
         $this->container = $shell->getProcContainer();
@@ -127,7 +120,12 @@ abstract class EventHandler implements HasIdGenerator
             $this->handleRequest($request, $controller, $socket);
         } catch (\Throwable $e) {
             $this->expReporter->report($e);
-            $socket->emit('error', $e->getMessage());
+            $response = $request->makeResponse(new ErrorInfo([
+                'errcode' => ErrorInfo::HOST_REQUEST_FAIL,
+                'errmsg' => get_class($e) . ':' . $e->getMessage(),
+            ]));
+
+            $response->emit($socket);
         }
 
         $end = microtime(true);
@@ -168,7 +166,7 @@ abstract class EventHandler implements HasIdGenerator
         // 记录公共的错误信息日志. 这些是逻辑上的问题, 不是给用户的提示.
         if (!empty($errors)) {
             foreach ($errors as $key => $error) {
-                $this->logger->error(__METHOD__ . " $key: $error");
+                $this->logger->error(__METHOD__ . " failed. $key: $error");
             }
         }
     }
@@ -181,7 +179,7 @@ abstract class EventHandler implements HasIdGenerator
     {
         if (!is_array($data)) {
             $error = 'invalid request data: ' . var_export($data, true);
-            $socket->emit('error', $error);
+            $socket->emit('', $error);
             return null;
         }
 

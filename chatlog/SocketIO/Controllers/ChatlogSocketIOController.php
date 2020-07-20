@@ -21,7 +21,7 @@ class ChatlogSocketIOController extends BaseNamespace
     /*--- 配置 ---*/
 
     protected $protocals = [
-        'sign' => SignHandler::class,
+        'SIGN' => SignHandler::class,
     ];
 
 

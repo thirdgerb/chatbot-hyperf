@@ -19,7 +19,7 @@ class SignInfo extends AbsMessage
     {
         return [
             'name' => '',
-            'password' => ''
+            'password' => '',
         ];
     }
 
