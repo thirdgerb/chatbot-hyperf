@@ -7,7 +7,9 @@ namespace Commune\Chatlog\Platform;
 use Commune\Chatbot\Hyperf\Platforms\HfSocketIOPlatformConfig;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOOption;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOPlatform;
-use Commune\Chatlog\SocketIO\Controllers\BaseController;
+use Commune\Chatlog\ChatlogConfig;
+use Commune\Chatlog\SocketIO\Controllers\ChatlogSocketIOController;
+use Commune\Chatlog\SocketIO\Process\AsyncMessageProcess;
 use Commune\Framework\Providers\LoggerByMonologProvider;
 
 /**
@@ -41,10 +43,15 @@ class ChatlogSocketIOPlatformConfig extends HfSocketIOPlatformConfig
                             'port' => env('CHATLOG_SOCKET_IO_PORT', 9510),
                         ],
                     ],
-                    'processes' => [],
+                    'processes' => [
+                        AsyncMessageProcess::class,
+                    ],
                     'settings' => [],
-                    'controller' => BaseController::class,
+                    'controller' => ChatlogSocketIOController::class,
                     'namespaces' => [],
+                ],
+                ChatlogConfig::class => [
+                    'jwtSecret' => env('CHATLOG_JWT_SECRET', 'helple~~ss'),
                 ],
             ],
         ];

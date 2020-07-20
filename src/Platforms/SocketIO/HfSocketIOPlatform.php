@@ -3,13 +3,11 @@
 namespace Commune\Chatbot\Hyperf\Platforms\SocketIO;
 
 
-use Commune\Support\Utils\StringUtils;
 use FastRoute\Dispatcher;
 use Hyperf\Contract\ConfigInterface;
-use Hyperf\HttpServer\Router\DispatcherFactory;
-use Hyperf\HttpServer\Router\Router;
-use Hyperf\SocketIOServer\SocketIO;
 use Hyperf\Utils\ApplicationContext;
+use Hyperf\HttpServer\Router\DispatcherFactory;
+use Commune\Chatbot\Hyperf\Hacks\SockeIO\HfSocketIO;
 use Hyperf\SocketIOServer\Collector\SocketIORouter;
 use Hyperf\SocketIOServer\Room\AdapterInterface;
 use Hyperf\SocketIOServer\SidProvider\SidProviderInterface;
@@ -62,7 +60,7 @@ class HfSocketIOPlatform extends AbsHyperfServerPlatform
         $factory = $container->get(DispatcherFactory::class);
         foreach ($option->servers as $serverOption) {
             $router = $factory->getRouter($serverOption->name);
-            $router->addRoute('GET', $path, SocketIO::class);
+            $router->addRoute('GET', $path, HfSocketIO::class);
         }
 
         $controller = $option->controller;
