@@ -5,6 +5,7 @@ namespace Commune\Chatlog\SocketIO\Controllers;
 
 use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Blueprint\Host;
+use Commune\Chatlog\ChatlogConfig;
 use Commune\Chatlog\SocketIO\Blueprint\EventHandler;
 use Commune\Chatlog\SocketIO\Handlers\SignHandler;
 use Commune\Contracts\Log\ConsoleLogger;
@@ -17,13 +18,6 @@ use Hyperf\WebSocketServer\Sender;
 class ChatlogSocketIOController extends BaseNamespace
 {
     const EVENT_METHOD_PREFIX = '_on_';
-
-    /*--- 配置 ---*/
-
-    protected $protocals = [
-        'SIGN' => SignHandler::class,
-    ];
-
 
     /*--- 依赖 ---*/
 
@@ -43,6 +37,10 @@ class ChatlogSocketIOController extends BaseNamespace
      */
     protected $container;
 
+    /**
+     * @var string[]
+     */
+    protected $protocals = [];
 
     public function __construct(
         Host $host,
@@ -54,6 +52,7 @@ class ChatlogSocketIOController extends BaseNamespace
 
         parent::__construct($sender,$sidProvider);
 
+        $this->protocals = $this->container->get(ChatlogConfig::class)->protocals;
         // 协议.
         foreach ($this->protocals as $eventName => $handler) {
             $method = self::EVENT_METHOD_PREFIX . $eventName;
@@ -75,7 +74,6 @@ class ChatlogSocketIOController extends BaseNamespace
         }
 
         try {
-
             /**
              * @var EventHandler $handler
              */

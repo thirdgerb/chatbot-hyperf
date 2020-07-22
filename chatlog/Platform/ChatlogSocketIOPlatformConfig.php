@@ -44,7 +44,7 @@ class ChatlogSocketIOPlatformConfig extends HfSocketIOPlatformConfig
                         ],
                     ],
                     'processes' => [
-                        AsyncMessageProcess::class,
+                        // AsyncMessageProcess::class,
                     ],
                     'settings' => [],
                     'controller' => ChatlogSocketIOController::class,

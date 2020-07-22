@@ -3,9 +3,8 @@
 
 namespace Commune\Chatlog\SocketIO\Blueprint;
 
-use Commune\Blueprint\Framework\ProcContainer;
-use Commune\Blueprint\Host;
 use Commune\Blueprint\Shell;
+use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SioRequest;
 use Commune\Contracts\Log\ConsoleLogger;
@@ -124,7 +123,6 @@ abstract class EventHandler implements HasIdGenerator
                 'errcode' => ErrorInfo::HOST_REQUEST_FAIL,
                 'errmsg' => get_class($e) . ':' . $e->getMessage(),
             ]));
-
             $response->emit($socket);
         }
 

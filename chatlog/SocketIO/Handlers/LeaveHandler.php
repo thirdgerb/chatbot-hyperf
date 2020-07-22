@@ -13,7 +13,7 @@ use Commune\Chatlog\SocketIO\Protocal\SioRequest;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
-class JoinHandler extends EventHandler
+class LeaveHandler extends EventHandler
 {
     protected $middlewares = [
         TokenAuthorizePipe::class,
@@ -25,18 +25,15 @@ class JoinHandler extends EventHandler
         Socket $socket
     ): array
     {
-        $user = $request->user;
-        if (empty($user)) {
-            return [static::class => 'user is empty'];
-        }
-
         $room = new Room($request->proto);
-        //todo 可能有权限问题.
+
+        $socket->leave($room->session);
+        $user = $request->user;
 
         $session = $room->session;
         $socket->join($session);
 
-        $text = TextMessage::instance($user->name . ' 加入了对话');
+        $text = TextMessage::instance($user->name . ' 离开了对话');
         $response = $request->makeResponse(
             MessageBatch::fromSystem($session, $text)
         );

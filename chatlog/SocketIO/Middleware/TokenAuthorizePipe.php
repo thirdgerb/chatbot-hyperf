@@ -73,6 +73,7 @@ class TokenAuthorizePipe implements EventPipe
                     'errcode' => ErrorInfo::UNAUTHORIZED,
                     'errmsg' => $error = 'user info not exists',
                 ]);
+                $this->socket->leaveAll();
 
                 $request->makeResponse($errorInfo)->emit($this->socket);
                 return [static::class => $error];
