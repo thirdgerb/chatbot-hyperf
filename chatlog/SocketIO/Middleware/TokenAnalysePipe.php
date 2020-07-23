@@ -4,9 +4,10 @@
 namespace Commune\Chatlog\SocketIO\Middleware;
 
 use Commune\Chatbot\Hyperf\Coms\SocketIO\EventPipe;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\SioRequest;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
-use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
+use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Hyperf\SocketIOServer\Socket;
 
 class TokenAnalysePipe implements EventPipe
@@ -32,12 +33,12 @@ class TokenAnalysePipe implements EventPipe
     }
 
 
-    public function handle(ChatlogSioRequest $request, \Closure $next): array
+    public function handle(SioRequest $request, \Closure $next): array
     {
         return $this->validateToken($request) ?? $next($request);
     }
 
-    protected function validateToken(ChatlogSioRequest $request) : ? array
+    protected function validateToken(SioRequest $request) : ? array
     {
         $tokenStr = $request->token;
 
@@ -79,7 +80,7 @@ class TokenAnalysePipe implements EventPipe
                 return [];
             }
 
-            $request->withUser($user);
+            $request->with(UserInfo::class, $user);
             return null;
 
         } catch (\Throwable $e) {

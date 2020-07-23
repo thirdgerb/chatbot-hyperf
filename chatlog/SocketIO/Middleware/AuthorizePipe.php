@@ -5,8 +5,9 @@ namespace Commune\Chatlog\SocketIO\Middleware;
 
 
 use Commune\Chatbot\Hyperf\Coms\SocketIO\EventPipe;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\SioRequest;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
-use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
+use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Hyperf\SocketIOServer\Socket;
 
 class AuthorizePipe implements EventPipe
@@ -26,9 +27,9 @@ class AuthorizePipe implements EventPipe
     }
 
 
-    public function handle(ChatlogSioRequest $request, \Closure $next): array
+    public function handle(SioRequest $request, \Closure $next): array
     {
-        $user = $request->user;
+        $user = $request->getTemp(UserInfo::class);
         if (empty($user)) {
             $error = '必须登录';
             $errorInfo = new ErrorInfo([

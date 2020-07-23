@@ -3,13 +3,13 @@
 
 namespace Commune\Chatlog\SocketIO\Handlers;
 
-use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsChatlogEventHandler;
 use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
 use Commune\Chatlog\SocketIO\Protocal\ChatInfo;
 use Commune\Chatlog\SocketIO\Protocal\Room;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
+use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
@@ -31,7 +31,7 @@ class ManualHandler extends AbsChatlogEventHandler
         Socket $socket
     ): array
     {
-        $user = $request->user;
+        $user = $request->getTemp(UserInfo::class);
         if (empty($user)) {
             return [static::class => 'user is empty'];
         }

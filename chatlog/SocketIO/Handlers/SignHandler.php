@@ -6,7 +6,6 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 
 use Commune\Blueprint\Shell;
 use Commune\Blueprint\Framework\Auth\Supervise;
-use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsChatlogEventHandler;
 use Commune\Chatlog\Database\ChatlogUserRepo;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
@@ -76,7 +75,7 @@ class SignHandler extends AbsChatlogEventHandler implements HasIdGenerator
         Socket $socket
     ) : ? array
     {
-        $user = $request->user;
+        $user = $request->getTemp(UserInfo::class);
         // 是否用 token 登录
         if (empty($user)) {
             return null;

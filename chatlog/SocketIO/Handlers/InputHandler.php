@@ -4,13 +4,14 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
-use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsChatlogEventHandler;
+use Commune\Chatlog\SocketIO\Handlers\AbsChatlogEventHandler;
 use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
 use Commune\Chatlog\SocketIO\Protocal\Input;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
+use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
@@ -28,7 +29,7 @@ class InputHandler extends AbsChatlogEventHandler
         Socket $socket
     ): array
     {
-        $user = $request->user;
+        $user = $request->getTemp(UserInfo::class);
         $input = Input::create($request->proto);
         $broadcasting = MessageBatch::fromInput($input, $user);
 

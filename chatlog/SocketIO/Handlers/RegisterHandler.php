@@ -6,7 +6,6 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 
 use Commune\Blueprint\Framework\Auth\Supervise;
 use Commune\Blueprint\Shell;
-use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsChatlogEventHandler;
 use Commune\Chatlog\Database\ChatlogUserRepo;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;

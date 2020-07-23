@@ -66,13 +66,13 @@ class SocketIOController extends BaseNamespace
         $event = substr($name, strlen(self::EVENT_METHOD_PREFIX));
 
         $handlerName = $this->protocals[$event] ?? null;
-        if (empty($handlerName) || !is_a($handlerName, AbsChatlogEventHandler::class, true)) {
+        if (empty($handlerName) || !is_a($handlerName, AbsEventHandler::class, true)) {
             throw new \LogicException("event $event defined invalid handler $handlerName");
         }
 
         try {
             /**
-             * @var AbsChatlogEventHandler $handler
+             * @var AbsEventHandler $handler
              */
             $handler = $this->container->make($handlerName);
             array_unshift($arguments, $event, $this);

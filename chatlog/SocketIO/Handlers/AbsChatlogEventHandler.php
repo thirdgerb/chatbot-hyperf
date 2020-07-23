@@ -1,9 +1,11 @@
 <?php
 
 
-namespace Commune\Chatbot\Hyperf\Coms\SocketIO;
+namespace Commune\Chatlog\SocketIO\Handlers;
 
 
+use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsEventHandler;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\SioRequest;
 use Commune\Chatlog\Database\ChatlogMessageRepo;
 use Commune\Chatlog\Database\ChatlogUserRepo;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
@@ -110,7 +112,7 @@ abstract class AbsChatlogEventHandler extends AbsEventHandler implements HasIdGe
     {
         if (!is_array($data)) {
             $error = 'invalid request data: ' . var_export($data, true);
-            $socket->emit('', $error);
+            $socket->emit('error', $error);
             return null;
         }
 

@@ -4,6 +4,9 @@
 namespace Commune\Chatlog\SocketIO\Protocal;
 
 
+use Commune\Chatbot\Hyperf\Coms\SocketIO\ResponseProtocal;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\SioRequest;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\SioResponse;
 use Commune\Support\Message\AbsMessage;
 use Commune\Support\Utils\TypeUtils;
 use Commune\Support\Uuid\HasIdGenerator;
@@ -14,9 +17,8 @@ use Commune\Support\Uuid\IdGeneratorHelper;
  * @property-read string $trace
  * @property-read string $token
  * @property-read array $proto
- * @property-read UserInfo|null $user
  */
-class ChatlogSioRequest extends AbsMessage implements HasIdGenerator
+class ChatlogSioRequest extends AbsMessage implements SioRequest, HasIdGenerator
 {
     use IdGeneratorHelper;
 
@@ -28,7 +30,6 @@ class ChatlogSioRequest extends AbsMessage implements HasIdGenerator
             'event' => '',
             'trace' => '',
             'token' => '',
-            'user' => null,
             'proto' => [],
         ];
     }
@@ -38,7 +39,7 @@ class ChatlogSioRequest extends AbsMessage implements HasIdGenerator
      * @param mixed $value
      * @return ChatlogSioRequest
      */
-    public function with(string $key, $value) : self
+    public function with(string $key, $value) : SioRequest
     {
         $this->temp[$key] = $value;
         return $this;
@@ -59,13 +60,11 @@ class ChatlogSioRequest extends AbsMessage implements HasIdGenerator
             ?? parent::validate($data);
     }
 
-    public function withUser(UserInfo $user) : ChatlogSioRequest
-    {
-        $this->_data['user'] = $user;
-        return $this;
-    }
-
-    public function makeResponse(ChatlogResProtocal $protocal) : ChatlogSioResponse
+    /**
+     * @param ChatlogResProtocal $protocal
+     * @return ChatlogSioResponse
+     */
+    public function makeResponse(ResponseProtocal $protocal): SioResponse
     {
         return new ChatlogSioResponse([
             'event' => $protocal->getEvent(),
@@ -73,6 +72,7 @@ class ChatlogSioRequest extends AbsMessage implements HasIdGenerator
             'proto' => $protocal,
         ]);
     }
+
 
     public static function relations(): array
     {

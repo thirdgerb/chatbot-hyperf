@@ -4,7 +4,6 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
-use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsChatlogEventHandler;
 use Commune\Chatlog\SocketIO\Messages\TextMessage;
 use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
@@ -12,6 +11,7 @@ use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Chatlog\SocketIO\Protocal\Room;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
+use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
@@ -32,7 +32,7 @@ class LeaveHandler extends AbsChatlogEventHandler
         $room = new Room($request->proto);
 
         $socket->leave($room->session);
-        $user = $request->user;
+        $user = $request->getTemp(UserInfo::class);
 
         $session = $room->session;
         $socket->join($session);
