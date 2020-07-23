@@ -3,14 +3,13 @@
 
 namespace Commune\Chatlog\SocketIO\Handlers;
 
-use Commune\Chatbot\Hyperf\Coms\SocketIO\EventHandler;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsChatlogEventHandler;
 use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
 use Commune\Chatlog\SocketIO\Protocal\ChatInfo;
 use Commune\Chatlog\SocketIO\Protocal\Room;
-use Commune\Chatlog\SocketIO\Protocal\SioRequest;
-use Commune\Chatlog\SocketIO\Protocal\SioResponse;
+use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
@@ -18,7 +17,7 @@ use Hyperf\SocketIOServer\Socket;
 /**
  * 转人工服务
  */
-class ManualHandler extends EventHandler
+class ManualHandler extends AbsChatlogEventHandler
 {
     protected $middlewares = [
         RequestGuardPipe::class,
@@ -27,7 +26,7 @@ class ManualHandler extends EventHandler
     ];
 
     function handle(
-        SioRequest $request,
+        ChatlogSioRequest $request,
         BaseNamespace $controller,
         Socket $socket
     ): array

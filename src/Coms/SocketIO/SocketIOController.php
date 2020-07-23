@@ -3,9 +3,8 @@
 
 namespace Commune\Chatbot\Hyperf\Coms\SocketIO;
 
-use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Blueprint\Host;
-use Commune\Chatlog\SocketIO\Blueprint\ChatlogConfig;
+use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Contracts\Log\ExceptionReporter;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\SidProvider\SidProviderInterface;
@@ -47,9 +46,11 @@ class SocketIOController extends BaseNamespace
         $this->container = $host->getProcContainer();
 
         parent::__construct($sender,$sidProvider);
+        $this->registerHandlers();
+    }
 
-        $this->protocals = $this->container->get(ChatlogConfig::class)->protocals;
-        // 协议.
+    protected function registerHandlers(): void
+    {
         foreach ($this->protocals as $eventName => $handler) {
             $method = self::EVENT_METHOD_PREFIX . $eventName;
             $this->on($eventName, [$this, $method]);
@@ -65,13 +66,13 @@ class SocketIOController extends BaseNamespace
         $event = substr($name, strlen(self::EVENT_METHOD_PREFIX));
 
         $handlerName = $this->protocals[$event] ?? null;
-        if (empty($handlerName) || !is_a($handlerName, EventHandler::class, true)) {
+        if (empty($handlerName) || !is_a($handlerName, AbsChatlogEventHandler::class, true)) {
             throw new \LogicException("event $event defined invalid handler $handlerName");
         }
 
         try {
             /**
-             * @var EventHandler $handler
+             * @var AbsChatlogEventHandler $handler
              */
             $handler = $this->container->make($handlerName);
             array_unshift($arguments, $event, $this);

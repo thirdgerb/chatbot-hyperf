@@ -6,7 +6,7 @@ namespace Commune\Chatlog\SocketIO\Protocal;
 
 use Commune\Blueprint\Exceptions\CommuneErrorCode;
 
-class ErrorInfo extends ResponseProtocal implements CommuneErrorCode
+class ErrorInfo extends ChatlogResProtocal implements CommuneErrorCode
 {
     public static function stub(): array
     {

@@ -16,7 +16,7 @@ use Commune\Support\Uuid\IdGeneratorHelper;
  * @property-read array $proto
  * @property-read UserInfo|null $user
  */
-class SioRequest extends AbsMessage implements HasIdGenerator
+class ChatlogSioRequest extends AbsMessage implements HasIdGenerator
 {
     use IdGeneratorHelper;
 
@@ -36,7 +36,7 @@ class SioRequest extends AbsMessage implements HasIdGenerator
     /**
      * @param string $key
      * @param mixed $value
-     * @return SioRequest
+     * @return ChatlogSioRequest
      */
     public function with(string $key, $value) : self
     {
@@ -59,15 +59,15 @@ class SioRequest extends AbsMessage implements HasIdGenerator
             ?? parent::validate($data);
     }
 
-    public function withUser(UserInfo $user) : SioRequest
+    public function withUser(UserInfo $user) : ChatlogSioRequest
     {
         $this->_data['user'] = $user;
         return $this;
     }
 
-    public function makeResponse(ResponseProtocal $protocal) : SioResponse
+    public function makeResponse(ChatlogResProtocal $protocal) : ChatlogSioResponse
     {
-        return new SioResponse([
+        return new ChatlogSioResponse([
             'event' => $protocal->getEvent(),
             'trace' => $this->trace,
             'proto' => $protocal,

@@ -6,7 +6,7 @@ namespace Commune\Chatlog\SocketIO\Middleware;
 
 use Commune\Chatbot\Hyperf\Coms\SocketIO\EventPipe;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
-use Commune\Chatlog\SocketIO\Protocal\SioRequest;
+use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Hyperf\SocketIOServer\Socket;
 
 class AuthorizePipe implements EventPipe
@@ -26,7 +26,7 @@ class AuthorizePipe implements EventPipe
     }
 
 
-    public function handle(SioRequest $request, \Closure $next): array
+    public function handle(ChatlogSioRequest $request, \Closure $next): array
     {
         $user = $request->user;
         if (empty($user)) {

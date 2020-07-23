@@ -6,13 +6,13 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 
 use Commune\Blueprint\Framework\Auth\Supervise;
 use Commune\Blueprint\Shell;
-use Commune\Chatbot\Hyperf\Coms\SocketIO\EventHandler;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsChatlogEventHandler;
 use Commune\Chatlog\Database\ChatlogUserRepo;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SignInfo;
-use Commune\Chatlog\SocketIO\Protocal\SioRequest;
+use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Commune\Contracts\Log\ExceptionReporter;
 use Commune\Support\Uuid\HasIdGenerator;
@@ -21,7 +21,7 @@ use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 use Psr\Log\LoggerInterface;
 
-class RegisterHandler extends EventHandler implements HasIdGenerator
+class RegisterHandler extends AbsChatlogEventHandler implements HasIdGenerator
 {
     use SignTrait, IdGeneratorHelper;
 
@@ -53,7 +53,7 @@ class RegisterHandler extends EventHandler implements HasIdGenerator
     }
 
     function handle(
-        SioRequest $request,
+        ChatlogSioRequest $request,
         BaseNamespace $controller,
         Socket $socket
     ): array
@@ -63,7 +63,7 @@ class RegisterHandler extends EventHandler implements HasIdGenerator
     }
 
     protected function registerSign(
-        SioRequest $request,
+        ChatlogSioRequest $request,
         BaseNamespace $controller,
         Socket $socket
     ) : array

@@ -3,19 +3,19 @@
 
 namespace Commune\Chatbot\Hyperf\Coms\SocketIO;
 
-use Commune\Blueprint\Shell;
-use Commune\Blueprint\Framework\ProcContainer;
+
+use Commune\Chatlog\Database\ChatlogMessageRepo;
+use Commune\Chatlog\Database\ChatlogUserRepo;
+use Commune\Chatlog\SocketIO\Coms\JwtFactory;
+use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
-use Commune\Chatlog\SocketIO\Protocal\SioRequest;
-use Commune\Contracts\Log\ConsoleLogger;
-use Commune\Contracts\Log\ExceptionReporter;
+use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Framework\IReqContainer;
 use Commune\Support\Pipeline\OnionPipeline;
 use Commune\Support\Uuid\HasIdGenerator;
 use Commune\Support\Uuid\IdGeneratorHelper;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
-use Psr\Log\LoggerInterface;
 
 
 /**
@@ -27,121 +27,47 @@ use Psr\Log\LoggerInterface;
  * 考虑 Commune 内部服务的互通性, 将业务相关的依赖注入转移到 Commune 自己的容器里.
  *
  */
-abstract class EventHandler implements HasIdGenerator
+abstract class AbsChatlogEventHandler extends AbsEventHandler implements HasIdGenerator
 {
     use IdGeneratorHelper;
 
     /**
-     * 中间件
-     * @var string[]
-     */
-    protected $middlewares = [];
-
-    /*---- 依赖注入 ----*/
-
-    /**
-     * @var Shell
-     */
-    protected $shell;
-
-    /**
-     * @var ProcContainer
-     */
-    protected $container;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var ExceptionReporter
-     */
-    protected $expReporter;
-
-    /**
-     * @var ConsoleLogger
-     */
-    protected $console;
-
-    /**
-     * EventHandler constructor.
-     * @param Shell $shell
-     * @param LoggerInterface $logger
-     * @param ExceptionReporter $reporter
-     */
-    public function __construct(
-        Shell $shell,
-        LoggerInterface $logger,
-        ExceptionReporter $reporter
-    )
-    {
-        $this->shell = $shell;
-        $this->console = $shell->getConsoleLogger();
-        $this->container = $shell->getProcContainer();
-        $this->logger = $logger;
-        $this->expReporter = $reporter;
-    }
-
-
-    /**
-     * @param SioRequest $request
+     * @param ChatlogSioRequest $request
      * @param BaseNamespace $controller
      * @param Socket $socket
-     * @return mixed
+     * @return array
      */
     abstract function handle(
-        SioRequest $request,
+        ChatlogSioRequest $request,
         BaseNamespace $controller,
         Socket $socket
     ) : array;
 
-
-    public function __invoke(
-        string $event,
+    protected function errorResponse(
+        \Throwable $e,
+        SioRequest $request,
         BaseNamespace $controller,
-        Socket $socket,
-        $data
-    ) : void
+        Socket $socket
+    ): void
     {
-        //todo 删掉debug.
-        $this->console->debug("incoming event: $event, data: " . var_export($data, true));
-
-        $request = $this->fetchRequest($event, $socket, $data);
-        if (empty($request)) {
-            return;
-        }
-
-        $start = microtime(true);
-
-        try {
-
-            $this->handleRequest($request, $controller, $socket);
-        } catch (\Throwable $e) {
-            $this->expReporter->report($e);
-            $response = $request->makeResponse(new ErrorInfo([
-                'errcode' => ErrorInfo::HOST_REQUEST_FAIL,
-                'errmsg' => get_class($e),
-            ]));
-            $response->emit($socket);
-        }
-
-        $end = microtime(true);
-        $gap = round(($end-$start) * 1000000, 0);
-        $name = $this->shell->getId();
-
-        // 记录日志.
-        $this->logger->debug(
-            "finish shell $name event request in $gap us",
-            ['trace' => $request->trace]
-        );
+        $response = $request->makeResponse(new ErrorInfo([
+            'errcode' => ErrorInfo::HOST_REQUEST_FAIL,
+            'errmsg' => get_class($e),
+        ]));
+        $response->emit($socket);
     }
 
+
+    /**
+     * @param ChatlogSioRequest $request
+     * @param BaseNamespace $controller
+     * @param Socket $socket
+     */
     protected function handleRequest(
         SioRequest $request,
         BaseNamespace $controller,
         Socket $socket
-    )
+    ) : void
     {
         $trace = $request->trace;
         $container = new IReqContainer($this->container, $trace);
@@ -149,11 +75,12 @@ abstract class EventHandler implements HasIdGenerator
         $container->share(BaseNamespace::class, $controller);
         $container->share(Socket::class, $socket);
         $container->share(SioRequest::class, $request);
+        $container->share(ChatlogSioRequest::class, $request);
 
         // 是否要用中间件.
         if (!empty($this->middlewares)) {
             $pipes = new OnionPipeline($container, $this->middlewares);
-            $errors = $pipes->send($request, function(SioRequest $request) use ($controller, $socket){
+            $errors = $pipes->send($request, function(ChatlogSioRequest $request) use ($controller, $socket){
                 return $this->handle($request, $controller, $socket);
             });
 
@@ -169,6 +96,12 @@ abstract class EventHandler implements HasIdGenerator
         }
     }
 
+    /**
+     * @param string $event
+     * @param Socket $socket
+     * @param $data
+     * @return ChatlogSioRequest|null
+     */
     protected function fetchRequest(
         string $event,
         Socket $socket,
@@ -183,7 +116,7 @@ abstract class EventHandler implements HasIdGenerator
 
         try {
             $data['event'] = $event;
-            return new SioRequest($data);
+            return new ChatlogSioRequest($data);
 
         } catch (\Throwable $e) {
             $error = get_class($e) . ': ' . $e->getMessage();
@@ -200,7 +133,7 @@ abstract class EventHandler implements HasIdGenerator
     public function emitErrorInfo(
         int $code,
         string $message,
-        SioRequest $request,
+        ChatlogSioRequest $request,
         Socket $socket) : array
     {
         $message = empty($message)
@@ -214,5 +147,42 @@ abstract class EventHandler implements HasIdGenerator
 
         $request->makeResponse($error)->emit($socket);
         return [];
+    }
+
+
+    public function receiveInputMessage(
+        MessageBatch $batch,
+        SioRequest $request,
+        Socket $socket
+    ) : void
+    {
+
+        $response = $request->makeResponse($batch);
+        $session = $batch->session;
+
+        $socket
+            ->to($session)
+            ->emit($response->event, $response->toEmit());
+    }
+
+    public function getMessageRepo() : ChatlogMessageRepo
+    {
+        return $this
+            ->container
+            ->make(ChatlogMessageRepo::class);
+    }
+
+    public function getUserRepo() : ChatlogUserRepo
+    {
+        return $this
+            ->container
+            ->make(ChatlogUserRepo::class);
+    }
+
+    public function getJwtFactory() : JwtFactory
+    {
+        return $this
+            ->container
+            ->make(JwtFactory::class);
     }
 }

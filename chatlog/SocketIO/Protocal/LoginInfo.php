@@ -13,7 +13,7 @@ use Commune\Support\Message\AbsMessage;
  * @property-read string $name
  * @property-read string $token
  */
-class LoginInfo extends ResponseProtocal
+class LoginInfo extends ChatlogResProtocal
 {
     public function getEvent(): string
     {

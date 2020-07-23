@@ -17,7 +17,7 @@ use Commune\Chatlog\SocketIO\Messages\Message;
  * @property-read Message[] $messages
  * @property-read int $createdAt
  */
-class MessageBatch extends ResponseProtocal
+class MessageBatch extends ChatlogResProtocal
 {
     const MODE_BOT = 1;
     const MODE_USER = 2;

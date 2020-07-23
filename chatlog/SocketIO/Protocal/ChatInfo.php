@@ -13,7 +13,7 @@ use Commune\Support\Utils\TypeUtils;
  * @property-read bool $closable    是否可以关闭.
  * @property-read bool $bot         默认和机器人对话.
  */
-class ChatInfo extends ResponseProtocal
+class ChatInfo extends ChatlogResProtocal
 {
     public static function stub(): array
     {

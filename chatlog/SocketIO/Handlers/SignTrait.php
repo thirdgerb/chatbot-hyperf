@@ -10,7 +10,7 @@ use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SignInfo;
-use Commune\Chatlog\SocketIO\Protocal\SioRequest;
+use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 
 trait SignTrait
 {
@@ -18,7 +18,7 @@ trait SignTrait
     public function loginUser(
         UserInfo $user,
         string $token,
-        SioRequest $request,
+        ChatlogSioRequest $request,
         BaseNamespace $controller,
         Socket $socket
     ) : array
@@ -36,7 +36,7 @@ trait SignTrait
     }
 
     public function validateSign(
-        SioRequest $request,
+        ChatlogSioRequest $request,
         Socket $socket
     ) : ? array
     {
@@ -67,7 +67,7 @@ trait SignTrait
         $password = $sign->password;
         $length = strlen($password);
 
-        if ($length < 8) {
+        if ($length > 0 && $length < 8) {
             $this->emitErrorInfo(
                 ErrorInfo::UNPROCESSABLE_ENTITY,
                 '密码需要至少8个字符',
@@ -95,7 +95,7 @@ trait SignTrait
 
     protected function initializeUser(
         UserInfo $user,
-        SioRequest $request,
+        ChatlogSioRequest $request,
         BaseNamespace $controller,
         Socket $socket
     ) : array

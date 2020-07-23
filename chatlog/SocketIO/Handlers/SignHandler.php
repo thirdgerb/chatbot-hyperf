@@ -6,21 +6,19 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 
 use Commune\Blueprint\Shell;
 use Commune\Blueprint\Framework\Auth\Supervise;
-use Commune\Chatbot\Hyperf\Coms\SocketIO\EventHandler;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsChatlogEventHandler;
 use Commune\Chatlog\Database\ChatlogUserRepo;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SignInfo;
-use Commune\Chatlog\SocketIO\Protocal\LoginInfo;
-use Commune\Chatlog\SocketIO\Protocal\SioRequest;
+use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Commune\Contracts\Log\ExceptionReporter;
 use Commune\Support\Uuid\HasIdGenerator;
 use Commune\Support\Uuid\IdGeneratorHelper;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
-
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
 use Psr\Log\LoggerInterface;
 
@@ -28,7 +26,7 @@ use Psr\Log\LoggerInterface;
 /**
  * 用户信息登入. 也会给用户进行初始化.
  */
-class SignHandler extends EventHandler implements HasIdGenerator
+class SignHandler extends AbsChatlogEventHandler implements HasIdGenerator
 {
     use IdGeneratorHelper, SignTrait;
 
@@ -61,7 +59,7 @@ class SignHandler extends EventHandler implements HasIdGenerator
     }
 
     function handle(
-        SioRequest $request,
+        ChatlogSioRequest $request,
         BaseNamespace $controller,
         Socket $socket
     ): array
@@ -73,7 +71,7 @@ class SignHandler extends EventHandler implements HasIdGenerator
     }
 
     protected function isTokenSign(
-        SioRequest $request,
+        ChatlogSioRequest $request,
         BaseNamespace $controller,
         Socket $socket
     ) : ? array
@@ -88,7 +86,7 @@ class SignHandler extends EventHandler implements HasIdGenerator
 
 
     protected function isUserSign(
-        SioRequest $request,
+        ChatlogSioRequest $request,
         BaseNamespace $controller,
         Socket $socket
     ) : array
@@ -115,7 +113,7 @@ class SignHandler extends EventHandler implements HasIdGenerator
     }
 
     protected function isGuestSign(
-        SioRequest $request,
+        ChatlogSioRequest $request,
         BaseNamespace $controller,
         Socket $socket
     ) : ? array
@@ -132,7 +130,6 @@ class SignHandler extends EventHandler implements HasIdGenerator
         $name = $sign->name;
         $uuid = $this->createUuId();
         $user = $this->createGuest($uuid, $name);
-        $this->initializeUser($user, $request, $controller, $socket);
 
         return $this->loginUser(
             $user,
@@ -150,17 +147,9 @@ class SignHandler extends EventHandler implements HasIdGenerator
 
     protected function createGuest(
         string $uuid,
-        string $name,
-        string $password = null
+        string $name
     ) : UserInfo
     {
-        $this->repo->register(
-            $uuid,
-            $name,
-            $password ?? '',
-            Supervise::GUEST
-        );
-
         return new UserInfo([
             'id' => $uuid,
             'name' => $name,

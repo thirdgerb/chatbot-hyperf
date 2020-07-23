@@ -4,16 +4,16 @@
 namespace Commune\Chatlog\SocketIO\Protocal;
 
 
-use Commune\Blueprint\Exceptions\CommuneErrorCode;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\SioResponse;
 use Commune\Support\Message\AbsMessage;
 use Hyperf\SocketIOServer\Socket;
 
 /**
  * @property-read string $event
  * @property-read string $trace
- * @property-read \Commune\Chatlog\SocketIO\Protocal\ResponseProtocal|null $proto
+ * @property-read \Commune\Chatlog\SocketIO\Protocal\ChatlogResProtocal|null $proto
  */
-class SioResponse extends AbsMessage implements CommuneErrorCode
+class ChatlogSioResponse extends AbsMessage implements SioResponse
 {
     public static function stub(): array
     {

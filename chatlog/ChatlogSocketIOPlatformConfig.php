@@ -1,14 +1,13 @@
 <?php
 
 
-namespace Commune\Chatlog\Platform;
+namespace Commune\Chatlog;
 
 
-use Commune\Chatlog\ChatlogSocketIOServiceProvider;
-use Commune\Chatbot\Hyperf\Coms\SocketIO\SocketIOController;
 use Commune\Chatbot\Hyperf\Platforms\HfSocketIOPlatformConfig;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOOption;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOPlatform;
+use Commune\Chatlog\SocketIO\ChatlogSocketIOController;
 use Commune\Framework\Providers\LoggerByMonologProvider;
 
 /**
@@ -50,7 +49,7 @@ class ChatlogSocketIOPlatformConfig extends HfSocketIOPlatformConfig
                         // AsyncMessageProcess::class,
                     ],
                     'settings' => [],
-                    'controller' => SocketIOController::class,
+                    'controller' => ChatlogSocketIOController::class,
                     'namespaces' => [],
                 ],
 

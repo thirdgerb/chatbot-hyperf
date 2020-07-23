@@ -4,8 +4,6 @@
 namespace Commune\Chatbot\Hyperf\Coms\SocketIO;
 
 
-use Commune\Chatlog\SocketIO\Protocal\SioRequest;
-
 /**
  * 事件管道.
  */
