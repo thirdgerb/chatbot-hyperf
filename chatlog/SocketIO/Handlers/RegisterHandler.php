@@ -11,7 +11,6 @@ use Commune\Chatlog\Database\ChatlogUserRepo;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
-use Commune\Chatlog\SocketIO\Protocal\LoginInfo;
 use Commune\Chatlog\SocketIO\Protocal\SignInfo;
 use Commune\Chatlog\SocketIO\Protocal\SioRequest;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
@@ -106,23 +105,15 @@ class RegisterHandler extends EventHandler implements HasIdGenerator
             'level' => $level
         ]);
 
-        $this->initializeUser(
+        $token = $this->jwtFactory->issueToken($userInfo);
+
+        return $this->loginUser(
             $userInfo,
+            $token,
             $request,
             $controller,
             $socket
         );
-
-        $token = $this->jwtFactory->issueToken($userInfo);
-
-        $login = new LoginInfo([
-            'id' => $userId,
-            'name' => $username,
-            'token' => $token,
-        ]);
-
-        $request->makeResponse($login)->emit($socket);
-        return [];
     }
 
 

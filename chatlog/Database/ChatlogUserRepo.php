@@ -6,13 +6,13 @@ namespace Commune\Chatlog\Database;
 
 use Carbon\Carbon;
 use Commune\Blueprint\Framework\Auth\Supervise;
+use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Chatlog\SocketIO\Blueprint\ChatlogConfig;
 use Commune\Container\ContainerContract;
-use Hyperf\Database\Query\Builder;
 use Hyperf\Database\Schema\Blueprint;
+use Hyperf\Database\Query\Builder;
 use Hyperf\DbConnection\Db;
 use Lcobucci\JWT\Signer;
-use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key;
 
 class ChatlogUserRepo
@@ -25,9 +25,21 @@ class ChatlogUserRepo
     protected $config;
 
     /**
-     * @var ContainerContract
+     * @var ProcContainer
      */
     protected $container;
+
+    /**
+     * ChatlogUserRepo constructor.
+     * @param ChatlogConfig $config
+     * @param ProcContainer $container
+     */
+    public function __construct(ChatlogConfig $config, ProcContainer $container)
+    {
+        $this->config = $config;
+        $this->container = $container;
+    }
+
 
     public static function createTable(Blueprint $table) : void
     {
@@ -37,7 +49,7 @@ class ChatlogUserRepo
         $table->string('name');
         $table->string('password_hash');
         $table->tinyInteger('level');
-        $table->timestamp('createdAt');
+        $table->timestamp('created_at');
 
         $table->unique('user_id', 'unq_user');
         $table->unique('name', 'unq_name');
@@ -77,7 +89,7 @@ class ChatlogUserRepo
             'password_hash' => $this->hashPassword($password),
             'level' => $level,
             'uuid' => $uuid ?? '',
-            'createdAt' => new Carbon(),
+            'created_at' => new Carbon(),
         ];
 
         return $this->newBuilder()->insert([$data]);
@@ -85,20 +97,16 @@ class ChatlogUserRepo
 
     public function hashPassword(string $password) : string
     {
-        if (empty($password)) {
-            return '';
-        }
-
         /**
          * @var Signer $signer
          */
         $signer = $this->container->make($this->config->userHashSigner);
         $key = new Key($this->config->userHashSalt);
-        $hash = $signer->sign($password, $key);
+        $hash = bin2hex($signer->sign($password, $key));
         return $hash;
     }
 
-    public function verifyUser(string $name, string $password) : \stdClass
+    public function verifyUser(string $name, string $password) : ? \stdClass
     {
         $hash = $this->hashPassword($password);
 

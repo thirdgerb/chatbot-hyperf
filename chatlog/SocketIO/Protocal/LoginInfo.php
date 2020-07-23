@@ -23,8 +23,6 @@ class LoginInfo extends ResponseProtocal
     public static function stub(): array
     {
         return [
-            'errcode' => 0,
-            'errmsg' => '',
             'id' => '',
             'name' => '',
             'token' => '',

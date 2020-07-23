@@ -11,6 +11,7 @@ use Commune\Support\Message\AbsMessage;
  *
  * @property-read string $session
  * @property-read string $scene
+ * @property-read int $createdAt
  * @property-read bool $bot
  * @property-read Message $message
  */
@@ -22,6 +23,7 @@ class Input extends AbsMessage
             'session' => '',
             'scene' => '',
             'bot' => true,
+            'createdAt' => 0,
             'message' => [],
         ];
     }

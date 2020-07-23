@@ -4,6 +4,8 @@
 namespace Commune\Chatlog;
 
 
+use Commune\Chatlog\Database\ChatlogMessageRepo;
+use Commune\Chatlog\Database\ChatlogUserRepo;
 use Commune\Chatlog\SocketIO\Blueprint\ChatlogConfig;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Handlers;
@@ -64,9 +66,11 @@ class ChatlogSocketIOServiceProvider extends ServiceProvider
 
     public function register(ContainerContract $app): void
     {
-        $app->singleton(ChatlogConfig::class, $this);
+        $app->instance(ChatlogConfig::class, $this);
 
         $app->singleton(JwtFactory::class);
+        $app->singleton(ChatlogUserRepo::class);
+        $app->singleton(ChatlogMessageRepo::class);
     }
 
 

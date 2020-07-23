@@ -83,9 +83,7 @@ class SignHandler extends EventHandler implements HasIdGenerator
         if (empty($user)) {
             return null;
         }
-
-        $this->initializeUser($user, $request, $controller, $socket);
-        return [];
+        return $this->initializeUser($user, $request, $controller, $socket);
     }
 
 
@@ -96,7 +94,6 @@ class SignHandler extends EventHandler implements HasIdGenerator
     ) : array
     {
         $sign = $request->getTemp(SignInfo::class);
-
         $user = $this->findUser($sign);
 
         if (empty($user)) {
@@ -108,8 +105,13 @@ class SignHandler extends EventHandler implements HasIdGenerator
             );
         }
 
-        $this->initializeUser($user, $request, $controller, $socket);
-        return [];
+        return $this->loginUser(
+            $user,
+            $this->makeToken($user),
+            $request,
+            $controller,
+            $socket
+        );
     }
 
     protected function isGuestSign(
@@ -118,38 +120,27 @@ class SignHandler extends EventHandler implements HasIdGenerator
         Socket $socket
     ) : ? array
     {
-        $data = $request->proto;
-        $sign = new SignInfo($data);
-
+        /**
+         * @var SignInfo $sign
+         */
+        $sign = $request->getTemp(SignInfo::class);
         // 有密码就不是访客登录.
         if (!empty($sign->password)) {
             return null;
         }
 
         $name = $sign->name;
-        if ($this->repo->userNameExists($name)) {
-            return $this->emitErrorInfo(
-                ErrorInfo::UNAUTHORIZED,
-                "用户名[$name]已经被占用",
-                $request,
-                $socket
-            );
-        }
-
         $uuid = $this->createUuId();
-        $user = $this->createGuest($uuid, $sign->name);
+        $user = $this->createGuest($uuid, $name);
         $this->initializeUser($user, $request, $controller, $socket);
 
-        $login = new LoginInfo([
-            'id' => $user->id,
-            'name' => $user->name,
-            'token' => $this->makeToken($user)
-        ]);
-
-        // 发送已登录的消息.
-        $response = $request->makeResponse($login);
-        $socket->emit($response->event, $response->toEmit());
-        return [];
+        return $this->loginUser(
+            $user,
+            $this->makeToken($user),
+            $request,
+            $controller,
+            $socket
+        );
     }
 
     protected function makeToken(UserInfo $user) : string
@@ -181,7 +172,6 @@ class SignHandler extends EventHandler implements HasIdGenerator
     {
         $user = $this->repo->verifyUser($login->name, $login->password);
         if (!empty($user)) {
-
             return new UserInfo([
                 'id' => $user->user_id,
                 'name' => $user->name,

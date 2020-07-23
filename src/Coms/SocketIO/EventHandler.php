@@ -7,7 +7,6 @@ use Commune\Blueprint\Shell;
 use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SioRequest;
-use Commune\Chatlog\SocketIO\Protocal\SioResponse;
 use Commune\Contracts\Log\ConsoleLogger;
 use Commune\Contracts\Log\ExceptionReporter;
 use Commune\Framework\IReqContainer;
@@ -122,7 +121,7 @@ abstract class EventHandler implements HasIdGenerator
             $this->expReporter->report($e);
             $response = $request->makeResponse(new ErrorInfo([
                 'errcode' => ErrorInfo::HOST_REQUEST_FAIL,
-                'errmsg' => get_class($e) . ':' . $e->getMessage(),
+                'errmsg' => get_class($e),
             ]));
             $response->emit($socket);
         }
@@ -206,7 +205,7 @@ abstract class EventHandler implements HasIdGenerator
     {
         $message = empty($message)
             ? ErrorInfo::DEFAULT_ERROR_MESSAGES[$code]
-            : '';
+            : $message;
 
         $error = new ErrorInfo([
             'errcode' => $code,

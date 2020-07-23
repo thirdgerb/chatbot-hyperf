@@ -15,6 +15,7 @@ use Commune\Chatlog\SocketIO\Messages\Message;
  * @property-read string $creatorId
  * @property-read string $creatorName
  * @property-read Message[] $messages
+ * @property-read int $createdAt
  */
 class MessageBatch extends ResponseProtocal
 {
@@ -32,6 +33,7 @@ class MessageBatch extends ResponseProtocal
             'creatorName' => '',
             'messages' => [
             ],
+            'createdAt' => 0
         ];
     }
 
@@ -49,6 +51,7 @@ class MessageBatch extends ResponseProtocal
             'messages' => [
                 $input->message,
             ],
+            'createdAt' => $input->createdAt,
         ]);
     }
 
