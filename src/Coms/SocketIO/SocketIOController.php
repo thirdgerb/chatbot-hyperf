@@ -1,21 +1,17 @@
 <?php
 
-namespace Commune\Chatlog\SocketIO\Controllers;
 
+namespace Commune\Chatbot\Hyperf\Coms\SocketIO;
 
 use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Blueprint\Host;
-use Commune\Chatlog\ChatlogConfig;
-use Commune\Chatlog\SocketIO\Blueprint\EventHandler;
-use Commune\Chatlog\SocketIO\Handlers\SignHandler;
-use Commune\Contracts\Log\ConsoleLogger;
+use Commune\Chatlog\SocketIO\Blueprint\ChatlogConfig;
 use Commune\Contracts\Log\ExceptionReporter;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\SidProvider\SidProviderInterface;
-use Hyperf\SocketIOServer\Socket;
 use Hyperf\WebSocketServer\Sender;
 
-class ChatlogSocketIOController extends BaseNamespace
+class SocketIOController extends BaseNamespace
 {
     const EVENT_METHOD_PREFIX = '_on_';
 
@@ -85,7 +81,5 @@ class ChatlogSocketIOController extends BaseNamespace
             $this->expReporter->report($e);
         }
     }
-
-
 
 }

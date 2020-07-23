@@ -20,6 +20,7 @@ class SioRequest extends AbsMessage implements HasIdGenerator
 {
     use IdGeneratorHelper;
 
+    protected $temp = [];
 
     public static function stub(): array
     {
@@ -30,6 +31,26 @@ class SioRequest extends AbsMessage implements HasIdGenerator
             'user' => null,
             'proto' => [],
         ];
+    }
+
+    /**
+     * @param string $key
+     * @param mixed $value
+     * @return SioRequest
+     */
+    public function with(string $key, $value) : self
+    {
+        $this->temp[$key] = $value;
+        return $this;
+    }
+
+    /**
+     * @param string $key
+     * @return mixed|null
+     */
+    public function getTemp(string $key)
+    {
+        return $this->temp[$key] ?? null;
     }
 
     public static function validate(array $data): ? string /* errorMsg */

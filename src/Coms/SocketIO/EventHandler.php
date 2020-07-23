@@ -1,12 +1,13 @@
 <?php
 
 
-namespace Commune\Chatlog\SocketIO\Blueprint;
+namespace Commune\Chatbot\Hyperf\Coms\SocketIO;
 
 use Commune\Blueprint\Shell;
 use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SioRequest;
+use Commune\Chatlog\SocketIO\Protocal\SioResponse;
 use Commune\Contracts\Log\ConsoleLogger;
 use Commune\Contracts\Log\ExceptionReporter;
 use Commune\Framework\IReqContainer;
@@ -194,4 +195,25 @@ abstract class EventHandler implements HasIdGenerator
         }
     }
 
+
+    /*----- helpers -----*/
+
+    public function emitErrorInfo(
+        int $code,
+        string $message,
+        SioRequest $request,
+        Socket $socket) : array
+    {
+        $message = empty($message)
+            ? ErrorInfo::DEFAULT_ERROR_MESSAGES[$code]
+            : '';
+
+        $error = new ErrorInfo([
+            'errcode' => $code,
+            'errmsg' => $message,
+        ]);
+
+        $request->makeResponse($error)->emit($socket);
+        return [];
+    }
 }

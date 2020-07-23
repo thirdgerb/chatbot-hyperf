@@ -4,7 +4,7 @@
 namespace Commune\Chatlog\Test\SocketIO;
 
 
-use Commune\Chatlog\ChatlogConfig;
+use Commune\Chatlog\ChatlogSocketIOServiceProvider;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use PHPUnit\Framework\TestCase;
@@ -14,7 +14,7 @@ class JwtFactoryTest extends TestCase
 
     public function testToken()
     {
-        $factory = new JwtFactory(new ChatlogConfig([]));
+        $factory = new JwtFactory(new ChatlogSocketIOServiceProvider([]));
         $user = new UserInfo(['id'=> 'test', 'name' => 'test']);
         $token = $factory->issueToken($user);
 

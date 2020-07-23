@@ -4,12 +4,11 @@
 namespace Commune\Chatlog\Platform;
 
 
+use Commune\Chatlog\ChatlogSocketIOServiceProvider;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\SocketIOController;
 use Commune\Chatbot\Hyperf\Platforms\HfSocketIOPlatformConfig;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOOption;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOPlatform;
-use Commune\Chatlog\ChatlogConfig;
-use Commune\Chatlog\SocketIO\Controllers\ChatlogSocketIOController;
-use Commune\Chatlog\SocketIO\Process\AsyncMessageProcess;
 use Commune\Framework\Providers\LoggerByMonologProvider;
 
 /**
@@ -33,6 +32,10 @@ class ChatlogSocketIOPlatformConfig extends HfSocketIOPlatformConfig
                     'name' => 'chatlog',
                     'forceRegister' => true,
                 ],
+                // Chatlog 服务提供.
+                ChatlogSocketIOServiceProvider::class => [
+                    'jwtSecret' => env('CHATLOG_JWT_SECRET', 'helple~~ss'),
+                ],
             ],
             'options' => [
                 HfSocketIOOption::class => [
@@ -47,12 +50,10 @@ class ChatlogSocketIOPlatformConfig extends HfSocketIOPlatformConfig
                         // AsyncMessageProcess::class,
                     ],
                     'settings' => [],
-                    'controller' => ChatlogSocketIOController::class,
+                    'controller' => SocketIOController::class,
                     'namespaces' => [],
                 ],
-                ChatlogConfig::class => [
-                    'jwtSecret' => env('CHATLOG_JWT_SECRET', 'helple~~ss'),
-                ],
+
             ],
         ];
     }

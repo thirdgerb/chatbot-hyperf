@@ -3,13 +3,13 @@
 
 namespace Commune\Chatlog\SocketIO\Middleware;
 
-use Commune\Chatlog\SocketIO\Blueprint\EventPipe;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\EventPipe;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SioRequest;
 use Hyperf\SocketIOServer\Socket;
 
-class TokenAuthorizePipe implements EventPipe
+class TokenAnalysePipe implements EventPipe
 {
     /**
      * @var JwtFactory
@@ -63,7 +63,7 @@ class TokenAuthorizePipe implements EventPipe
                 $res = $request->makeResponse($errorInfo);
                 $this->socket->emit($res->event, $res->toEmit());
 
-                return [static::class => $error];
+                return [];
             }
 
             // 设置用户的信息
@@ -76,7 +76,7 @@ class TokenAuthorizePipe implements EventPipe
                 $this->socket->leaveAll();
 
                 $request->makeResponse($errorInfo)->emit($this->socket);
-                return [static::class => $error];
+                return [];
             }
 
             $request->withUser($user);

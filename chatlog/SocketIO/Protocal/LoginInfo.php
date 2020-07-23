@@ -13,7 +13,7 @@ use Commune\Support\Message\AbsMessage;
  * @property-read string $name
  * @property-read string $token
  */
-class Login extends ResponseProtocal
+class LoginInfo extends ResponseProtocal
 {
     public function getEvent(): string
     {
@@ -23,6 +23,8 @@ class Login extends ResponseProtocal
     public static function stub(): array
     {
         return [
+            'errcode' => 0,
+            'errmsg' => '',
             'id' => '',
             'name' => '',
             'token' => '',

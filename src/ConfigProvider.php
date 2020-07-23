@@ -3,8 +3,6 @@
 namespace Commune\Chatbot\Hyperf;
 
 use Commune\Chatbot\Hyperf\Command\StartAppCommand;
-use Commune\Chatbot\Hyperf\Hacks\Websocket\HfWebsocketServer;
-use Commune\Chatbot\Hyperf\Hacks\Websocket\HfWebsocketServerFactory;
 
 class ConfigProvider
 {
@@ -12,6 +10,8 @@ class ConfigProvider
         'memories' => '2020_07_05_0_create_memories_table.php',
         'messages' => '2020_07_05_0_create_messages_table.php',
         'options' => '2020_07_05_0_create_options_table.php',
+        'chatlog_messages' => '2020_07_05_0_create_chatlog_messages_table.php',
+        'chatlog_users' => '2020_07_05_0_create_chatlog_users_table.php',
     ];
 
     public function __invoke() : array
@@ -20,13 +20,8 @@ class ConfigProvider
             'commands' => [
                 StartAppCommand::class,
             ],
-
             'dependencies' => [
-                // Host::class => HostFactory::class,
-                // HostConfig::class => HostConfigFactory::class,
-                HfWebsocketServer::class => HfWebsocketServerFactory::class,
             ],
-
             'publish' => $this->migrations,
         ];
     }

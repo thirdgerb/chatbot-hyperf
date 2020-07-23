@@ -9,13 +9,9 @@ use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\Dispatcher\HttpDispatcher;
 use Hyperf\ExceptionHandler\ExceptionHandlerDispatcher;
 use Hyperf\HttpServer\ResponseEmitter;
-use Hyperf\HttpServer\Router\Router;
 use Hyperf\WebSocketServer\Server;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Swoole\Http\Request as SwooleRequest;
-use Swoole\Http\Response as SwooleResponse;
-use Swoole\WebSocket\Frame;
 
 /**
  * Hyperf 默认的 Server 有一些设置不方便, 这里 hack 一下.

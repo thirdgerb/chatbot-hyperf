@@ -1,11 +1,6 @@
 <?php
 
 
-/**
- * Class HfMysqlMessageDB
- * @package Commune\Chatbot\Hyperf\Coms\MessageDB
- */
-
 namespace Commune\Chatbot\Hyperf\Coms\MessageDB;
 
 

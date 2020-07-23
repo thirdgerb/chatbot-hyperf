@@ -1,11 +1,5 @@
 <?php
 
-
-/**
- * Class HfDbStorage
- * @package Commune\Chatbot\Hyperf\Coms\Storage
- */
-
 namespace Commune\Chatbot\Hyperf\Coms\Storage;
 
 

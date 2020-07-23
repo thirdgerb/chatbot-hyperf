@@ -6,27 +6,41 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 
 use Commune\Blueprint\Shell;
 use Commune\Blueprint\Framework\Auth\Supervise;
-use Commune\Chatlog\SocketIO\Blueprint\EventHandler;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\EventHandler;
+use Commune\Chatlog\Database\ChatlogUserRepo;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
+use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SignInfo;
-use Commune\Chatlog\SocketIO\Protocal\Login;
+use Commune\Chatlog\SocketIO\Protocal\LoginInfo;
 use Commune\Chatlog\SocketIO\Protocal\SioRequest;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Commune\Contracts\Log\ExceptionReporter;
+use Commune\Support\Uuid\HasIdGenerator;
+use Commune\Support\Uuid\IdGeneratorHelper;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
-use Commune\Chatlog\SocketIO\Middleware\TokenAuthorizePipe;
+use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
 use Psr\Log\LoggerInterface;
 
 
-class SignHandler extends EventHandler
+/**
+ * 用户信息登入. 也会给用户进行初始化.
+ */
+class SignHandler extends EventHandler implements HasIdGenerator
 {
+    use IdGeneratorHelper, SignTrait;
+
     protected $middlewares = [
-        TokenAuthorizePipe::class,
+        RequestGuardPipe::class,
+        TokenAnalysePipe::class,
     ];
 
+    /**
+     * @var ChatlogUserRepo
+     */
+    protected $repo;
 
     /**
      * @var JwtFactory
@@ -36,11 +50,13 @@ class SignHandler extends EventHandler
     public function __construct(
         JwtFactory $factory,
         Shell $shell,
+        ChatlogUserRepo $repo,
         LoggerInterface $logger,
         ExceptionReporter $reporter
     )
     {
         $this->jwtFactory = $factory;
+        $this->repo = $repo;
         parent::__construct($shell, $logger, $reporter);
     }
 
@@ -51,6 +67,7 @@ class SignHandler extends EventHandler
     ): array
     {
         return $this->isTokenSign($request, $controller, $socket)
+            ?? $this->validateSign($request, $socket)
             ?? $this->isGuestSign($request, $controller, $socket)
             ?? $this->isUserSign($request, $controller, $socket);
     }
@@ -71,24 +88,24 @@ class SignHandler extends EventHandler
         return [];
     }
 
+
     protected function isUserSign(
         SioRequest $request,
         BaseNamespace $controller,
         Socket $socket
     ) : array
     {
-        $data = $request->proto;
-        $sign = new SignInfo($data);
+        $sign = $request->getTemp(SignInfo::class);
 
         $user = $this->findUser($sign);
-        if (empty($user)) {
-            $error = new ErrorInfo([
-                'errcode' => ErrorInfo::UNAUTHORIZED,
-                'errmsg' => $message = '登录信息有误',
-            ]);
 
-            $request->makeResponse($error)->emit($socket);
-            return [static::class => $error];
+        if (empty($user)) {
+            return $this->emitErrorInfo(
+                ErrorInfo::UNAUTHORIZED,
+                $error = '用户信息不存在',
+                $request,
+                $socket
+            );
         }
 
         $this->initializeUser($user, $request, $controller, $socket);
@@ -101,7 +118,6 @@ class SignHandler extends EventHandler
         Socket $socket
     ) : ? array
     {
-
         $data = $request->proto;
         $sign = new SignInfo($data);
 
@@ -110,11 +126,21 @@ class SignHandler extends EventHandler
             return null;
         }
 
-        $uuid = $request->trace;
+        $name = $sign->name;
+        if ($this->repo->userNameExists($name)) {
+            return $this->emitErrorInfo(
+                ErrorInfo::UNAUTHORIZED,
+                "用户名[$name]已经被占用",
+                $request,
+                $socket
+            );
+        }
+
+        $uuid = $this->createUuId();
         $user = $this->createGuest($uuid, $sign->name);
         $this->initializeUser($user, $request, $controller, $socket);
 
-        $login = new Login([
+        $login = new LoginInfo([
             'id' => $user->id,
             'name' => $user->name,
             'token' => $this->makeToken($user)
@@ -126,16 +152,24 @@ class SignHandler extends EventHandler
         return [];
     }
 
-
-
-
     protected function makeToken(UserInfo $user) : string
     {
         return (string) $this->jwtFactory->issueToken($user);
     }
 
-    protected function createGuest(string $uuid, string $name) : UserInfo
+    protected function createGuest(
+        string $uuid,
+        string $name,
+        string $password = null
+    ) : UserInfo
     {
+        $this->repo->register(
+            $uuid,
+            $name,
+            $password ?? '',
+            Supervise::GUEST
+        );
+
         return new UserInfo([
             'id' => $uuid,
             'name' => $name,
@@ -145,24 +179,17 @@ class SignHandler extends EventHandler
 
     protected function findUser(SignInfo $login) : ? UserInfo
     {
-        // todo
+        $user = $this->repo->verifyUser($login->name, $login->password);
+        if (!empty($user)) {
+
+            return new UserInfo([
+                'id' => $user->user_id,
+                'name' => $user->name,
+                'level' => $user->level,
+            ]);
+        }
         return null;
     }
 
-
-    protected function initializeUser(
-        UserInfo $user,
-        SioRequest $request,
-        BaseNamespace $controller,
-        Socket $socket
-    ) : void
-    {
-        $socket->join($user->id);
-
-        // 按权限加入各种房间.
-        if ($user->level === Supervise::SUPERVISOR) {
-            //todo
-        }
-    }
 
 }

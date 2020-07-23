@@ -4,9 +4,11 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
-use Commune\Chatlog\SocketIO\Blueprint\EventHandler;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\EventHandler;
 use Commune\Chatlog\SocketIO\Messages\TextMessage;
-use Commune\Chatlog\SocketIO\Middleware\TokenAuthorizePipe;
+use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
+use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
+use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Chatlog\SocketIO\Protocal\Room;
 use Commune\Chatlog\SocketIO\Protocal\SioRequest;
@@ -16,7 +18,9 @@ use Hyperf\SocketIOServer\Socket;
 class LeaveHandler extends EventHandler
 {
     protected $middlewares = [
-        TokenAuthorizePipe::class,
+        RequestGuardPipe::class,
+        TokenAnalysePipe::class,
+        AuthorizePipe::class,
     ];
 
     function handle(
