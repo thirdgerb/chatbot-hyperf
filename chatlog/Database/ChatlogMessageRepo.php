@@ -6,10 +6,12 @@ namespace Commune\Chatlog\Database;
 use Carbon\Carbon;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Support\Babel\Babel;
+use Commune\Support\Swoole\SwooleUtils;
 use Hyperf\Database\Query\Builder;
 use Hyperf\DbConnection\Db;
-use Commune\Chatlog\SocketIO\Blueprint\ChatlogConfig;
+use Commune\Chatlog\SocketIO\ChatlogConfig;
 use Hyperf\Database\Schema\Blueprint;
+use Swoole\Coroutine;
 
 class ChatlogMessageRepo
 {
@@ -61,7 +63,33 @@ class ChatlogMessageRepo
             ];
         }, $messages);
 
+        if (SwooleUtils::isInCoroutine()) {
+
+            // 使用协程保存.
+            Coroutine::create(function(Builder $builder, $data) {
+                $builder->insert($data);
+            }, $this->newBuilder(), $data);
+
+            return true;
+        }
         return $this->newBuilder()->insert($data);
+    }
+
+
+    /**
+     * @param string $session
+     * @param int $vernier
+     * @param int $limit
+     * @param bool $isNewNotOld
+     * @return MessageBatch[]
+     */
+    public function fetchMessagesByTime(
+        string $session,
+        int $vernier,
+        int $limit,
+        bool $isNewNotOld
+    ) : array
+    {
     }
 
 }

@@ -5,51 +5,24 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 
 
 use Commune\Blueprint\Framework\Auth\Supervise;
-use Commune\Blueprint\Shell;
-use Commune\Chatlog\Database\ChatlogUserRepo;
-use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SignInfo;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
-use Commune\Contracts\Log\ExceptionReporter;
 use Commune\Support\Uuid\HasIdGenerator;
 use Commune\Support\Uuid\IdGeneratorHelper;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
-use Psr\Log\LoggerInterface;
 
-class RegisterHandler extends AbsChatlogEventHandler implements HasIdGenerator
+class RegisterHandler extends ChatlogEventHandler implements HasIdGenerator
 {
     use SignTrait, IdGeneratorHelper;
 
-    /**
-     * @var ChatlogUserRepo
-     */
-    protected $repo;
-
-    /**
-     * @var JwtFactory
-     */
-    protected $jwtFactory;
 
     protected $middlewares = [
         RequestGuardPipe::class,
     ];
-
-    public function __construct(
-        Shell $shell,
-        ChatlogUserRepo $repo,
-        JwtFactory $factory,
-        LoggerInterface $logger,
-        ExceptionReporter $reporter
-    )
-    {
-        $this->repo = $repo;
-        $this->jwtFactory = $factory;
-        parent::__construct($shell, $logger, $reporter);
-    }
 
     function handle(
         ChatlogSioRequest $request,
@@ -72,7 +45,8 @@ class RegisterHandler extends AbsChatlogEventHandler implements HasIdGenerator
          */
         $sign = $request->getTemp(SignInfo::class);
         $name = $sign->name;
-        if ($this->repo->userNameExists($name)) {
+        $repo = $this->getUserRepo();
+        if ($repo->userNameExists($name)) {
             $this->emitErrorInfo(
                 ErrorInfo::UNPROCESSABLE_ENTITY,
                 "名字 [$name] 已被占用",
@@ -82,7 +56,7 @@ class RegisterHandler extends AbsChatlogEventHandler implements HasIdGenerator
             return [];
         }
 
-        $success = $this->repo->register(
+        $success = $repo->register(
             $userId = $this->createUuId(),
             $username = $sign->name,
             $sign->password,
@@ -104,8 +78,13 @@ class RegisterHandler extends AbsChatlogEventHandler implements HasIdGenerator
             'level' => $level
         ]);
 
-        $token = $this->jwtFactory->issueToken($userInfo);
+        $this->informSupervisor(
+            "用户注册: $username",
+            $request,
+            $controller
+        );
 
+        $token = $this->getJwtFactory()->issueToken($userInfo);
         return $this->loginUser(
             $userInfo,
             $token,

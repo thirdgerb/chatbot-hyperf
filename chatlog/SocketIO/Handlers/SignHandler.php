@@ -4,28 +4,23 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
-use Commune\Blueprint\Shell;
 use Commune\Blueprint\Framework\Auth\Supervise;
-use Commune\Chatlog\Database\ChatlogUserRepo;
-use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SignInfo;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
-use Commune\Contracts\Log\ExceptionReporter;
 use Commune\Support\Uuid\HasIdGenerator;
 use Commune\Support\Uuid\IdGeneratorHelper;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
-use Psr\Log\LoggerInterface;
 
 
 /**
  * 用户信息登入. 也会给用户进行初始化.
  */
-class SignHandler extends AbsChatlogEventHandler implements HasIdGenerator
+class SignHandler extends ChatlogEventHandler implements HasIdGenerator
 {
     use IdGeneratorHelper, SignTrait;
 
@@ -33,29 +28,6 @@ class SignHandler extends AbsChatlogEventHandler implements HasIdGenerator
         RequestGuardPipe::class,
         TokenAnalysePipe::class,
     ];
-
-    /**
-     * @var ChatlogUserRepo
-     */
-    protected $repo;
-
-    /**
-     * @var JwtFactory
-     */
-    protected $jwtFactory;
-
-    public function __construct(
-        JwtFactory $factory,
-        Shell $shell,
-        ChatlogUserRepo $repo,
-        LoggerInterface $logger,
-        ExceptionReporter $reporter
-    )
-    {
-        $this->jwtFactory = $factory;
-        $this->repo = $repo;
-        parent::__construct($shell, $logger, $reporter);
-    }
 
     function handle(
         ChatlogSioRequest $request,
@@ -130,6 +102,12 @@ class SignHandler extends AbsChatlogEventHandler implements HasIdGenerator
         $uuid = $this->createUuId();
         $user = $this->createGuest($uuid, $name);
 
+        $this->informSupervisor(
+            "访客登录: $name",
+            $request,
+            $controller
+        );
+
         return $this->loginUser(
             $user,
             $this->makeToken($user),
@@ -141,7 +119,7 @@ class SignHandler extends AbsChatlogEventHandler implements HasIdGenerator
 
     protected function makeToken(UserInfo $user) : string
     {
-        return (string) $this->jwtFactory->issueToken($user);
+        return (string) $this->getJwtFactory()->issueToken($user);
     }
 
     protected function createGuest(
@@ -149,6 +127,7 @@ class SignHandler extends AbsChatlogEventHandler implements HasIdGenerator
         string $name
     ) : UserInfo
     {
+
         return new UserInfo([
             'id' => $uuid,
             'name' => $name,
@@ -158,7 +137,7 @@ class SignHandler extends AbsChatlogEventHandler implements HasIdGenerator
 
     protected function findUser(SignInfo $login) : ? UserInfo
     {
-        $user = $this->repo->verifyUser($login->name, $login->password);
+        $user = $this->getUserRepo()->verifyUser($login->name, $login->password);
         if (!empty($user)) {
             return new UserInfo([
                 'id' => $user->user_id,

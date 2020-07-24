@@ -31,7 +31,7 @@ class AuthorizePipe implements EventPipe
     {
         $user = $request->getTemp(UserInfo::class);
         if (empty($user)) {
-            $error = '必须登录';
+            $error = '当前操作必须登录';
             $errorInfo = new ErrorInfo([
                 'errcode' => ErrorInfo::UNAUTHORIZED,
                 'errmsg' => $error,

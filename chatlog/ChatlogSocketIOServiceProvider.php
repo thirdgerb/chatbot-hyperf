@@ -4,9 +4,10 @@
 namespace Commune\Chatlog;
 
 
+use Commune\Blueprint\CommuneEnv;
 use Commune\Chatlog\Database\ChatlogMessageRepo;
 use Commune\Chatlog\Database\ChatlogUserRepo;
-use Commune\Chatlog\SocketIO\Blueprint\ChatlogConfig;
+use Commune\Chatlog\SocketIO\ChatlogConfig;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Handlers;
 use Commune\Container\ContainerContract;
@@ -32,6 +33,7 @@ class ChatlogSocketIOServiceProvider extends ServiceProvider
     {
         return [
             'appName' => 'chatlog',
+            'debug' => CommuneEnv::isDebug(),
             'protocals' => [
                 'SIGN' => Handlers\SignHandler::class,
                 'REGISTER' => Handlers\RegisterHandler::class,
@@ -49,6 +51,14 @@ class ChatlogSocketIOServiceProvider extends ServiceProvider
             'userHashSalt' => env('CHATLOG_USER_SALT', 'power overwhelming'),
         ];
     }
+
+    public function getAppId(): string
+    {
+        $salt = $this->jwtSecret;
+        $name = $this->appName;
+        return sha1("appName:$name:salt:$salt");
+    }
+
 
     public static function relations(): array
     {

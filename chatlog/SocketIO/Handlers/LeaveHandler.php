@@ -15,7 +15,7 @@ use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
-class LeaveHandler extends AbsChatlogEventHandler
+class LeaveHandler extends ChatlogEventHandler
 {
     protected $middlewares = [
         RequestGuardPipe::class,
@@ -30,13 +30,26 @@ class LeaveHandler extends AbsChatlogEventHandler
     ): array
     {
         $room = new Room($request->proto);
-
-        $socket->leave($room->session);
+        /**
+         * @var UserInfo $user
+         */
         $user = $request->getTemp(UserInfo::class);
 
+        // 任何时候都允许退出房间.
         $session = $room->session;
-        $socket->join($session);
+        $socket->leave($session);
 
+        // 如果用户本来无权限加入房间, 就有鬼了.
+        if ($this->getRoomService()->verifyUser($room->scene, $user, $session)) {
+            $this->logger->warning(
+                'user ' . $user->toJson()
+                . ' try to leave room ' . $room->toJson()
+                . ' ta can not join'
+            );
+            return [];
+        }
+
+        // 通知其它用户有人退出登录.
         $text = TextMessage::instance($user->name . ' 离开了对话');
         $response = $request->makeResponse(
             MessageBatch::fromSystem($session, $text)

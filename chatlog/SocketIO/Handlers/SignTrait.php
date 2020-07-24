@@ -4,6 +4,8 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
+use Commune\Chatlog\SocketIO\Coms\RoomOption;
+use Commune\Chatlog\SocketIO\Coms\RoomService;
 use Commune\Chatlog\SocketIO\Protocal\LoginInfo;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
@@ -12,9 +14,22 @@ use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\SignInfo;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 
+/**
+ * @mixin ChatlogEventHandler
+ */
 trait SignTrait
 {
 
+    /**
+     * 登录一个用户, 告知客户端用户已经登录.
+     *
+     * @param UserInfo $user
+     * @param string $token
+     * @param ChatlogSioRequest $request
+     * @param BaseNamespace $controller
+     * @param Socket $socket
+     * @return array
+     */
     public function loginUser(
         UserInfo $user,
         string $token,
@@ -31,10 +46,20 @@ trait SignTrait
 
         // 发送已登录的消息.
         $response = $request->makeResponse($login);
+        // 通知用户登录成功
         $socket->emit($response->event, $response->toEmit());
-        return $this->initializeUser($user, $request, $controller, $socket);
+
+        // 给用户推荐默认的房间.
+        return $this->initializeUser($user, $request, $socket);
     }
 
+    /**
+     * 校验用户的注册信息.
+     *
+     * @param ChatlogSioRequest $request
+     * @param Socket $socket
+     * @return array|null
+     */
     public function validateSign(
         ChatlogSioRequest $request,
         Socket $socket
@@ -93,22 +118,50 @@ trait SignTrait
     }
 
 
+    /**
+     * 初始化用户, 并且给用户推荐房间.
+     * 包括立刻加入的, 和主动推荐的.
+     *
+     * @param UserInfo $user
+     * @param ChatlogSioRequest $request
+     * @param Socket $socket
+     * @return array
+     */
     protected function initializeUser(
         UserInfo $user,
         ChatlogSioRequest $request,
-        BaseNamespace $controller,
         Socket $socket
     ) : array
     {
         // 提供一个系统可以感知的房间地址.
-        // 其实本来 socket 也会干这个事情.
+        // 其实本来 hyperf socket.io 也会干这个事情.
+        // 不过那个房间要感知挺麻烦的, 还会随着掉线而变动.
         $socket->join($user->id);
-//
-//        // 按权限加入各种房间.
-//        if ($user->level === Supervise::SUPERVISOR) {
-//            //todo
-//        }
+
+        $roomService = $this->getRoomService();
+
+        // autoJoins
+        $autoJoins = $roomService->autoJoinRoomsFor($user);
+        $autoJoins = $this->roomToChat($autoJoins, $user, $roomService, true);
+        static::emitChatInfo($request, $socket, ...$autoJoins);
+
+        $recommends = $roomService->recommendRoomsFor($user);
+        $recommends = $this->roomToChat($recommends, $user, $roomService, false);
+
+        static::emitChatInfo($request, $socket, ...$recommends);
         return [];
     }
 
+    public function roomToChat(
+        array $rooms,
+        UserInfo $user,
+        RoomService $service,
+        bool $autoJoin
+    ) : array
+    {
+        return array_map(function(RoomOption $option) use ($service, $user, $autoJoin){
+          return $service->createChatInfo($option, $user, $autoJoin, false);
+        }, $rooms);
+
+    }
 }

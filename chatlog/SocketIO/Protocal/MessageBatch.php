@@ -4,18 +4,20 @@
 namespace Commune\Chatlog\SocketIO\Protocal;
 
 
-use Commune\Chatlog\SocketIO\Messages\Message;
+use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
 
 /**
  * 消息批次.
  *
- * @property-read int $mode
- * @property-read string $session
- * @property-read string $batchId
- * @property-read string $creatorId
- * @property-read string $creatorName
- * @property-read Message[] $messages
- * @property-read int $createdAt
+ * @property int $mode
+ * @property string $session
+ * @property string $batchId
+ * @property string $creatorId
+ * @property string $creatorName
+ * @property ChatlogMessage[] $messages
+ * @property array $context
+ * @property array $suggestions
+ * @property int $createdAt
  */
 class MessageBatch extends ChatlogResProtocal
 {
@@ -31,6 +33,8 @@ class MessageBatch extends ChatlogResProtocal
             'batchId' => '',
             'creatorId' => '',
             'creatorName' => '',
+            'context' => [],
+            'suggestions' => [],
             'messages' => [
             ],
             'createdAt' => 0
@@ -55,24 +59,19 @@ class MessageBatch extends ChatlogResProtocal
         ]);
     }
 
-    public static function fromSystem(string $session, Message $message) : MessageBatch
+
+    public function addMessages(ChatlogMessage ...$messages) : void
     {
-        return new static([
-            'mode' => self::MODE_SYSTEM,
-            'session' => $session,
-            'batchId' => $message->id,
-            'creatorId' => '',
-            'creatorName' => '',
-            'messages' => [
-                $message,
-            ],
-        ]);
+        $this->_data['messages'] = array_merge(
+            $this->_data['messages'],
+            $messages
+        );
     }
 
     public static function relations(): array
     {
         return [
-            'messages[]' => Message::class
+            'messages[]' => ChatlogMessage::class
         ];
     }
 

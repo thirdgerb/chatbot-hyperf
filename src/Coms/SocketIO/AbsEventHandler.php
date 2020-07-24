@@ -10,6 +10,7 @@ use Psr\Log\LoggerInterface;
 use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Contracts\Log\ConsoleLogger;
 use Commune\Contracts\Log\ExceptionReporter;
+use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOPlatform;
 
 abstract class AbsEventHandler
 {
@@ -49,24 +50,33 @@ abstract class AbsEventHandler
     protected $console;
 
     /**
-     * EventHandler constructor.
+     * @var HfSocketIOPlatform
+     */
+    protected $platform;
+
+    /**
+     * AbsEventHandler constructor.
      * @param Shell $shell
+     * @param HfSocketIOPlatform $platform
      * @param LoggerInterface $logger
      * @param ExceptionReporter $reporter
      */
     public function __construct(
         Shell $shell,
+        HfSocketIOPlatform $platform,
         LoggerInterface $logger,
         ExceptionReporter $reporter
     )
     {
         $this->shell = $shell;
+        $this->platform = $platform;
         $this->console = $shell->getConsoleLogger();
         $this->container = $shell->getProcContainer();
         $this->logger = $logger;
         $this->expReporter = $reporter;
     }
 
+    abstract public function isDebug() : bool;
 
     public function __invoke(
         string $event,
@@ -75,9 +85,18 @@ abstract class AbsEventHandler
         $data
     ) : void
     {
-        $this->logger->debug("incoming event: $event, data: " . json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        if ($this->isDebug()) {
+            $this->logger->debug(
+                "incoming event: $event, data: "
+                . json_encode(
+                    $data,
+                    JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                )
+            );
+        }
 
         $request = $this->fetchRequest($event, $socket, $data);
+        // 如果请求为空, 则已经记录了错误信息.
         if (empty($request)) {
             return;
         }
@@ -87,16 +106,22 @@ abstract class AbsEventHandler
         try {
 
             $this->handleRequest($request, $controller, $socket);
-        } catch (\Throwable $e) {
 
-            $this->expReporter->report($e);
-            $this->errorResponse(
-                $e,
+        } catch (ProtocalException $e) {
+
+            $this->logger->warning($e);
+            static::emitErrorInfo(
+                $e->getCode(),
+                $e->getMessage(),
                 $request,
-                $controller,
                 $socket
             );
 
+
+        } catch (\Throwable $e) {
+
+            $this->expReporter->report($e);
+            $socket->emit('error', get_class($e) . ':' . $e->getMessage());
         }
 
         $end = microtime(true);
@@ -114,7 +139,7 @@ abstract class AbsEventHandler
      * @param string $event
      * @param Socket $socket
      * @param $data
-     * @return SioRequest|null
+     * @return SioRequest
      */
     abstract protected function fetchRequest(
         string $event,
@@ -134,10 +159,10 @@ abstract class AbsEventHandler
         Socket $socket
     ) : void;
 
-    abstract protected function errorResponse(
-        \Throwable $e,
+    abstract public static function emitErrorInfo(
+        int $code,
+        string $message,
         SioRequest $request,
-        BaseNamespace $controller,
         Socket $socket
-    ) : void;
+    ) : array;
 }

@@ -6,12 +6,21 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 
 use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsEventHandler;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\SioRequest;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\SioResponse;
 use Commune\Chatlog\Database\ChatlogMessageRepo;
 use Commune\Chatlog\Database\ChatlogUserRepo;
+use Commune\Chatlog\SocketIO\ChatlogConfig;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
+use Commune\Chatlog\SocketIO\Coms\RoomService;
+use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
+use Commune\Chatlog\SocketIO\Messages\TextMessage;
+use Commune\Chatlog\SocketIO\Protocal\ChatInfo;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
+use Commune\Chatlog\SocketIO\Protocal\ChatlogSioResponse;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
+use Commune\Chatlog\SocketIO\Protocal\QuitChat;
+use Commune\Chatlog\SocketIO\Protocal\Room;
 use Commune\Framework\IReqContainer;
 use Commune\Support\Pipeline\OnionPipeline;
 use Commune\Support\Uuid\HasIdGenerator;
@@ -29,9 +38,14 @@ use Hyperf\SocketIOServer\Socket;
  * 考虑 Commune 内部服务的互通性, 将业务相关的依赖注入转移到 Commune 自己的容器里.
  *
  */
-abstract class AbsChatlogEventHandler extends AbsEventHandler implements HasIdGenerator
+abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGenerator
 {
     use IdGeneratorHelper;
+
+    /**
+     * @var ChatlogConfig|null
+     */
+    protected $config;
 
     /**
      * @param ChatlogSioRequest $request
@@ -45,18 +59,9 @@ abstract class AbsChatlogEventHandler extends AbsEventHandler implements HasIdGe
         Socket $socket
     ) : array;
 
-    protected function errorResponse(
-        \Throwable $e,
-        SioRequest $request,
-        BaseNamespace $controller,
-        Socket $socket
-    ): void
+    public function isDebug(): bool
     {
-        $response = $request->makeResponse(new ErrorInfo([
-            'errcode' => ErrorInfo::HOST_REQUEST_FAIL,
-            'errmsg' => get_class($e),
-        ]));
-        $response->emit($socket);
+        return $this->getConfig()->debug;
     }
 
 
@@ -132,11 +137,53 @@ abstract class AbsChatlogEventHandler extends AbsEventHandler implements HasIdGe
 
     /*----- helpers -----*/
 
-    public function emitErrorInfo(
-        int $code,
+
+    /**
+     * 禁止行为.
+     * @param ChatlogSioRequest $request
+     * @param Socket $socket
+     * @return array
+     */
+    public static function forbidden(
+        ChatlogSioRequest $request,
+        Socket $socket
+    ) : array
+    {
+        return static::emitErrorInfo(
+            ErrorInfo::FORBIDDEN,
+            '没有权限加入房间',
+            $request,
+            $socket
+        );
+    }
+
+    public static function makeUserQuitChat(
+        string $session,
         string $message,
         ChatlogSioRequest $request,
-        Socket $socket) : array
+        Socket $socket
+    ) : array
+    {
+        $proto = new QuitChat(['session' => $session, 'message'=> $message]);
+        $request->makeResponse($proto)->emit($socket);
+        return [];
+    }
+
+    /**
+     * 通知一个异常信息.
+     *
+     * @param int $code
+     * @param string $message
+     * @param ChatlogSioRequest $request
+     * @param Socket $socket
+     * @return array
+     */
+    public static function emitErrorInfo(
+        int $code,
+        string $message,
+        SioRequest $request,
+        Socket $socket
+    ) : array
     {
         $message = empty($message)
             ? ErrorInfo::DEFAULT_ERROR_MESSAGES[$code]
@@ -151,20 +198,32 @@ abstract class AbsChatlogEventHandler extends AbsEventHandler implements HasIdGe
         return [];
     }
 
-
-    public function receiveInputMessage(
-        MessageBatch $batch,
+    public static function emitChatInfo(
         SioRequest $request,
-        Socket $socket
-    ) : void
+        Socket $socket,
+        ChatInfo ...$chats
+    ) : array
     {
+        if (empty($chats)) {
+            return [];
+        }
 
-        $response = $request->makeResponse($batch);
-        $session = $batch->session;
+        $event = $chats[0]->getEvent();
 
-        $socket
-            ->to($session)
-            ->emit($response->event, $response->toEmit());
+        $responses = array_map(function(ChatInfo $chat) use ($request){
+            return $request->makeResponse($chat)->toEmit();
+        }, $chats);
+
+        $socket->emit($event, ...$responses);
+        return [];
+    }
+
+    /*----- 工具类 -----*/
+
+    public function getConfig() : ChatlogConfig
+    {
+        return $this->config
+            ?? $this->config = $this->container->make(ChatlogConfig::class);
     }
 
     public function getMessageRepo() : ChatlogMessageRepo
@@ -186,5 +245,63 @@ abstract class AbsChatlogEventHandler extends AbsEventHandler implements HasIdGe
         return $this
             ->container
             ->make(JwtFactory::class);
+    }
+
+
+    public function getRoomService() : RoomService
+    {
+        return $this
+            ->container
+            ->make(RoomService::class);
+    }
+
+    /*----- 内部方法. -----*/
+
+    public function deliverToChatbot(
+        MessageBatch $batch,
+        ChatlogSioRequest $request,
+        BaseNamespace $controller,
+        Socket $socket
+    ) : void
+    {
+
+
+    }
+
+
+    public function informSupervisor(
+        string $message,
+        SioRequest $request,
+        BaseNamespace $emitter
+    ) : void
+    {
+        $session = $this->getRoomService()->getSupervisorSession();
+        $response = $this->makeSystemMessage(
+            $message,
+            $session,
+            $request
+        );
+        $emitter->to($session)->emit($response->event, $response->toEmit());
+    }
+
+
+    public function makeSystemMessage(
+        string $message,
+        string $session,
+        SioRequest $request
+    ) : SioResponse
+    {
+        $batch = new MessageBatch([
+            'mode' => MessageBatch::MODE_SYSTEM,
+            'session' => $session,
+            'batchId' => $this->createUuId(),
+            'creatorId' => $this->config->getAppId(),
+            'creatorName' => $this->config->appName,
+            'messages' => [
+                $message
+            ],
+            'createdAt' => time(),
+        ]);
+        return $request->makeResponse($batch);
     }
 }

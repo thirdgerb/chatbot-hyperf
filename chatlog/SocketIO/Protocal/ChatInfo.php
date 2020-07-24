@@ -24,19 +24,14 @@ class ChatInfo extends ChatlogResProtocal
             'session' => '',
             'closable' => true,
             'bot' => false,
+            'autoJoin' => false,
         ];
     }
 
-    public static function createByUserRoom(Room $room, UserInfo $user) : self
+    public function autoJoin(bool $bool) : ChatInfo
     {
-        return static::create([
-            'title' => mb_substr($user->name . ':' . $room->session, 0, 15),
-            'scene' => $room->scene,
-            'icon' => 'mdi-account-question',
-            'session' => $room->session,
-            'closable' => true,
-            'bot' => false,
-        ]);
+        $this->_data['autoJoin'] = $bool;
+        return $this;
     }
 
     public static function relations(): array

@@ -13,7 +13,7 @@ use Commune\Support\Uuid\IdGeneratorHelper;
  * @property-read string $id
  * @property-read string $type
  */
-class Message extends AbsMessage implements HasIdGenerator
+class ChatlogMessage extends AbsMessage implements HasIdGenerator
 {
     use IdGeneratorHelper;
 

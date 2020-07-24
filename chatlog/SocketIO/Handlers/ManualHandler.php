@@ -5,8 +5,8 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 
 use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
+use Commune\Chatlog\SocketIO\Middleware\RoomProtocalPipe;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
-use Commune\Chatlog\SocketIO\Protocal\ChatInfo;
 use Commune\Chatlog\SocketIO\Protocal\Room;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
@@ -17,12 +17,13 @@ use Hyperf\SocketIOServer\Socket;
 /**
  * 转人工服务
  */
-class ManualHandler extends AbsChatlogEventHandler
+class ManualHandler extends ChatlogEventHandler
 {
     protected $middlewares = [
         RequestGuardPipe::class,
         TokenAnalysePipe::class,
         AuthorizePipe::class,
+        RoomProtocalPipe::class,
     ];
 
     function handle(
@@ -32,17 +33,18 @@ class ManualHandler extends AbsChatlogEventHandler
     ): array
     {
         $user = $request->getTemp(UserInfo::class);
-        if (empty($user)) {
-            return [static::class => 'user is empty'];
-        }
+        $room = $request->getTemp(Room::class);
 
-        $room = new Room($request->proto);
-        $chatInfo = ChatInfo::createByUserRoom($room, $user);
+        // 权限校验.
+        $roomService = $this->getRoomService();
+        $chatInfo = $roomService->createChatInfo($room, $user, false, true);
+
         $response = $request->makeResponse($chatInfo);
+        $superviseSession = $roomService->getSupervisorSession();
 
-        // todo 指定管理员房间.
-        // 广播房间事件给各方.
-        $socket->to('commune-chat')->emit($response->event, $response->toEmit());
+        $socket->to($superviseSession)
+            ->emit($response->event, $response->toEmit());
+
         return [];
     }
 

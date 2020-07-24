@@ -4,23 +4,23 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
-use Commune\Chatlog\SocketIO\Messages\TextMessage;
 use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
+use Commune\Chatlog\SocketIO\Middleware\RoomProtocalPipe;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
-use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Chatlog\SocketIO\Protocal\Room;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
-class JoinHandler extends AbsChatlogEventHandler
+class JoinHandler extends ChatlogEventHandler
 {
     protected $middlewares = [
         RequestGuardPipe::class,
         TokenAnalysePipe::class,
         AuthorizePipe::class,
+        RoomProtocalPipe::class,
     ];
 
     function handle(
@@ -30,19 +30,17 @@ class JoinHandler extends AbsChatlogEventHandler
     ): array
     {
         $user = $request->getTemp(UserInfo::class);
-        if (empty($user)) {
-            return [static::class => 'user is empty'];
-        }
+        $room = $request->getTemp(Room::class);
 
-        $room = new Room($request->proto);
-        //todo 可能有权限问题.
-
+        // 加入房间.
         $session = $room->session;
         $socket->join($session);
 
-        $text = TextMessage::instance($user->name . ' 加入了对话');
-        $response = $request->makeResponse(
-            MessageBatch::fromSystem($session, $text)
+        // 广播系统消息.
+        $response = $this->makeSystemMessage(
+            $user->name . ' 加入了对话',
+            $session,
+            $request
         );
         $socket->to($session)->emit($response->event, $response->toEmit());
 

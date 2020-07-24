@@ -4,7 +4,7 @@
 namespace Commune\Chatlog\SocketIO\Coms;
 
 
-use Commune\Chatlog\SocketIO\Blueprint\ChatlogConfig;
+use Commune\Chatlog\SocketIO\ChatlogConfig;
 use Commune\Chatlog\SocketIO\Protocal\UserInfo;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Parser;

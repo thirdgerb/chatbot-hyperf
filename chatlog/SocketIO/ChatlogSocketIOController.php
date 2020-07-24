@@ -4,7 +4,7 @@
 namespace Commune\Chatlog\SocketIO;
 
 use Commune\Chatbot\Hyperf\Coms\SocketIO\SocketIOController;
-use Commune\Chatlog\SocketIO\Blueprint\ChatlogConfig;
+use Commune\Chatlog\SocketIO\ChatlogConfig;
 
 class ChatlogSocketIOController extends SocketIOController
 {

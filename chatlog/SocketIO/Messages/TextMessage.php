@@ -12,7 +12,7 @@ use Commune\Protocals\HostMsg;
  * @property-read string $type
  * @property-read string $text
  */
-class TextMessage extends Message
+class TextMessage extends ChatlogMessage
 {
 
     public static function instance(string $text) : TextMessage
@@ -24,7 +24,7 @@ class TextMessage extends Message
     {
         return [
             'id' => '',
-            'type' => Message::MESSAGE_TEXT,
+            'type' => ChatlogMessage::MESSAGE_TEXT,
             'text' => '',
         ];
     }

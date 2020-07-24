@@ -4,7 +4,7 @@
 namespace Commune\Chatlog\SocketIO\Protocal;
 
 
-use Commune\Chatlog\SocketIO\Messages\Message;
+use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
 use Commune\Support\Message\AbsMessage;
 
 /**
@@ -13,7 +13,7 @@ use Commune\Support\Message\AbsMessage;
  * @property-read string $scene
  * @property-read int $createdAt
  * @property-read bool $bot
- * @property-read Message $message
+ * @property-read ChatlogMessage $message
  */
 class Input extends AbsMessage
 {
@@ -30,13 +30,13 @@ class Input extends AbsMessage
 
     public function __set_message(string $name, array $value) : void
     {
-        $this->_data[$name] = Message::create($value);
+        $this->_data[$name] = ChatlogMessage::create($value);
     }
 
     public static function relations(): array
     {
         return [
-            'message' => Message::class,
+            'message' => ChatlogMessage::class,
         ];
     }
 
