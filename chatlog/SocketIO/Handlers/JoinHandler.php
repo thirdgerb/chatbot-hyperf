@@ -4,13 +4,14 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
+use Commune\Chatlog\SocketIO\Messages\TextMessage;
 use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Middleware\RoomProtocalPipe;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
-use Commune\Chatlog\SocketIO\Protocal\Room;
+use Commune\Chatlog\SocketIO\DTO\RoomInfo;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
@@ -30,7 +31,7 @@ class JoinHandler extends ChatlogEventHandler
     ): array
     {
         $user = $request->getTemp(UserInfo::class);
-        $room = $request->getTemp(Room::class);
+        $room = $request->getTemp(RoomInfo::class);
 
         // 加入房间.
         $session = $room->session;
@@ -38,7 +39,7 @@ class JoinHandler extends ChatlogEventHandler
 
         // 广播系统消息.
         $response = $this->makeSystemMessage(
-            $user->name . ' 加入了对话',
+            TextMessage::instance($user->name . ' 加入了对话'),
             $session,
             $request
         );

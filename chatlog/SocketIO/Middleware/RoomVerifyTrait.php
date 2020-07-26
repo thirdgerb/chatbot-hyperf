@@ -7,9 +7,10 @@ namespace Commune\Chatlog\SocketIO\Middleware;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\ProtocalException;
 use Commune\Chatlog\SocketIO\Coms\RoomService;
 use Commune\Chatlog\SocketIO\Handlers\ChatlogEventHandler;
+use Commune\Chatlog\SocketIO\Protocal\ChatDelete;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
-use Commune\Chatlog\SocketIO\Protocal\Room;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\SocketIO\DTO\RoomInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Commune\Support\Struct\InvalidStructException;
 use Hyperf\SocketIOServer\Socket;
 
@@ -26,20 +27,24 @@ trait RoomVerifyTrait
     {
 
         try {
-            $room = new Room(['scene' => $scene, 'session' => $session]);
+            $room = new RoomInfo(['scene' => $scene, 'session' => $session]);
         } catch (InvalidStructException $e) {
             throw new ProtocalException('invalid room data', $e);
         }
 
         $option = $service->findRoom($room->scene);
         if (empty($option)) {
-            return ChatlogEventHandler::makeUserQuitChat(
-                $room->session,
-                '房间已经不存在',
-                $request,
-                $this->socket
-            );
+
+            $chatDelete = new ChatDelete([
+                'session' => $session,
+                'reason' => '会话已经不存在',
+            ]);
+
+            $request->makeResponse($chatDelete)->emit($socket);
+            return [];
         }
+
+        $request->with(RoomInfo::class, $room);
 
         $user = $request->getTemp(UserInfo::class);
         if (empty($user)) {
@@ -48,13 +53,11 @@ trait RoomVerifyTrait
 
         if (!$service->verifyUser($room->scene, $user, $room->session)) {
             return ChatlogEventHandler::forbidden(
+                "没有权限访问当前房间",
                 $request,
                 $socket
             );
         }
-
-
-
 
         return null;
     }

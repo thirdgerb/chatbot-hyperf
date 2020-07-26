@@ -7,9 +7,9 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 use Commune\Blueprint\Framework\Auth\Supervise;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
-use Commune\Chatlog\SocketIO\Protocal\SignInfo;
+use Commune\Chatlog\SocketIO\DTO\SignInfo;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Commune\Support\Uuid\HasIdGenerator;
 use Commune\Support\Uuid\IdGeneratorHelper;
 use Hyperf\SocketIOServer\BaseNamespace;
@@ -47,12 +47,22 @@ class SignHandler extends ChatlogEventHandler implements HasIdGenerator
         Socket $socket
     ) : ? array
     {
+        $token = $request->token;
+        if (empty($token)) {
+            return null;
+        }
+
         $user = $request->getTemp(UserInfo::class);
         // 是否用 token 登录
         if (empty($user)) {
-            return null;
+            return $this->emitErrorInfo(
+                ErrorInfo::UNAUTHORIZED,
+                $error = 'token不正确',
+                $request,
+                $socket
+            );
         }
-        return $this->initializeUser($user, $request, $controller, $socket);
+        return $this->loginUser($user, $request->token, $request, $controller, $socket);
     }
 
 

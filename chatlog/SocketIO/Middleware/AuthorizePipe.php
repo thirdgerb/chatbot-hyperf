@@ -7,7 +7,7 @@ namespace Commune\Chatlog\SocketIO\Middleware;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\EventPipe;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\SioRequest;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Hyperf\SocketIOServer\Socket;
 
 class AuthorizePipe implements EventPipe

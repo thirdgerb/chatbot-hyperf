@@ -4,6 +4,8 @@
 namespace Commune\Chatlog\SocketIO\Protocal;
 
 
+use Commune\Chatlog\SocketIO\DTO\InputInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
 
 /**
@@ -42,7 +44,7 @@ class MessageBatch extends ChatlogResProtocal
     }
 
     public static function fromInput(
-        Input $input,
+        InputInfo $input,
         UserInfo $user
     ) : MessageBatch
     {
@@ -85,5 +87,45 @@ class MessageBatch extends ChatlogResProtocal
         return 'MESSAGE_BATCH';
     }
 
+    public function shouldSave() : bool
+    {
+        return $this->mode !== self::MODE_SYSTEM
+            && !empty($this->_data['messages']);
+    }
+
+    public function toSavableData() : array
+    {
+        $data = $this->_data;
+        if (empty($data['messages'])) {
+            return $data;
+        }
+
+        $messages = [];
+        foreach ($this->messages as $key => $message) {
+            if ($message->isSavable()) {
+                $messages[$key] = $message;
+            }
+        }
+
+        $data['messages'] = $messages;
+        return $data;
+    }
+
+    public function toTransferArr(): array
+    {
+        if ($this->isEmpty()) {
+            return parent::toTransferArr();
+        }
+
+        $backup = $this->_data;
+
+        // 有些消息类型不用存储.
+        $savable = $this->toSavableData();
+
+        $this->_data = $savable;
+        $serialized = parent::toTransferArr();
+        $this->_data = $backup;
+        return $serialized;
+    }
 
 }

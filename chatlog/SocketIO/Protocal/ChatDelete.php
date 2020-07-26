@@ -8,7 +8,7 @@ namespace Commune\Chatlog\SocketIO\Protocal;
  * @property-read string $session
  * @property-read string $reason
  */
-class QuitChat extends ChatlogResProtocal
+class ChatDelete extends ChatlogResProtocal
 {
     public static function stub(): array
     {
@@ -30,7 +30,7 @@ class QuitChat extends ChatlogResProtocal
 
     public function getEvent(): string
     {
-        return 'QUIT_CHAT';
+        return 'CHAT_DELETE';
     }
 
 

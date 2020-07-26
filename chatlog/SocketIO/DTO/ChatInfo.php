@@ -1,8 +1,10 @@
 <?php
 
 
-namespace Commune\Chatlog\SocketIO\Protocal;
+namespace Commune\Chatlog\SocketIO\DTO;
 
+use Commune\Chatlog\SocketIO\Coms\RoomOption;
+use Commune\Support\Message\AbsMessage;
 use Commune\Support\Utils\TypeUtils;
 
 /**
@@ -13,7 +15,7 @@ use Commune\Support\Utils\TypeUtils;
  * @property-read bool $closable    是否可以关闭.
  * @property-read bool $bot         默认和机器人对话.
  */
-class ChatInfo extends ChatlogResProtocal
+class ChatInfo extends AbsMessage
 {
     public static function stub(): array
     {
@@ -49,11 +51,5 @@ class ChatInfo extends ChatlogResProtocal
     {
         return false;
     }
-
-    public function getEvent(): string
-    {
-        return 'CHAT_INFO';
-    }
-
 
 }

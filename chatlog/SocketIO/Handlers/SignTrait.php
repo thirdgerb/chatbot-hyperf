@@ -4,14 +4,15 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
+use Commune\Chatbot\Hyperf\Coms\SocketIO\ProtocalException;
 use Commune\Chatlog\SocketIO\Coms\RoomOption;
 use Commune\Chatlog\SocketIO\Coms\RoomService;
 use Commune\Chatlog\SocketIO\Protocal\LoginInfo;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
-use Commune\Chatlog\SocketIO\Protocal\SignInfo;
+use Commune\Chatlog\SocketIO\DTO\SignInfo;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 
 /**
@@ -66,23 +67,18 @@ trait SignTrait
     ) : ? array
     {
         $data = $request->proto;
-        $sign = new SignInfo($data);
-
-        $nameLength = mb_strlen($sign->name);
-        if ($nameLength > 12) {
-            $this->emitErrorInfo(
-                ErrorInfo::UNPROCESSABLE_ENTITY,
-                '用户名过长',
-                $request,
-                $socket
-            );
-            return [];
+        try {
+            $sign = new SignInfo($data);
+        } catch (\Throwable $e) {
+            throw new ProtocalException('登录信息不正确', $e);
         }
 
-        if ($nameLength < 2) {
+        $name = $sign->name;
+        $nameLength = mb_strlen($name);
+        if ($nameLength > 20) {
             $this->emitErrorInfo(
                 ErrorInfo::UNPROCESSABLE_ENTITY,
-                '用户名太短',
+                "用户名[$name]过长",
                 $request,
                 $socket
             );
@@ -137,18 +133,19 @@ trait SignTrait
         // 其实本来 hyperf socket.io 也会干这个事情.
         // 不过那个房间要感知挺麻烦的, 还会随着掉线而变动.
         $socket->join($user->id);
-
-        $roomService = $this->getRoomService();
-
-        // autoJoins
-        $autoJoins = $roomService->autoJoinRoomsFor($user);
-        $autoJoins = $this->roomToChat($autoJoins, $user, $roomService, true);
-        static::emitChatInfo($request, $socket, ...$autoJoins);
-
-        $recommends = $roomService->recommendRoomsFor($user);
-        $recommends = $this->roomToChat($recommends, $user, $roomService, false);
-
-        static::emitChatInfo($request, $socket, ...$recommends);
+//
+//        $roomService = $this->getRoomService();
+//
+//        // autoJoins
+//        $autoJoins = $roomService->autoJoinRoomsFor($user);
+//        $autoJoins = $this->roomToChat($autoJoins, $user, $roomService, true);
+//
+//        static::emitChatInfo($request, $socket, ...$autoJoins);
+//
+//        $recommends = $roomService->recommendRoomsFor($user);
+//        $recommends = $this->roomToChat($recommends, $user, $roomService, false);
+//
+//        static::emitChatInfo($request, $socket, ...$recommends);
         return [];
     }
 
@@ -159,9 +156,9 @@ trait SignTrait
         bool $autoJoin
     ) : array
     {
-        return array_map(function(RoomOption $option) use ($service, $user, $autoJoin){
+        return array_values(array_map(function(RoomOption $option) use ($service, $user, $autoJoin){
           return $service->createChatInfo($option, $user, $autoJoin, false);
-        }, $rooms);
+        }, $rooms));
 
     }
 }

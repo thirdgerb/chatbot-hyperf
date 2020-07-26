@@ -1,31 +1,25 @@
 <?php
 
 
-namespace Commune\Chatlog\SocketIO\Protocal;
-
+namespace Commune\Chatlog\SocketIO\DTO;
 
 use Commune\Support\Message\AbsMessage;
 
 /**
- * 用户已经登录.
- *
- * @property-read string $id
  * @property-read string $name
- * @property-read string $token
+ * @property-read string $password
  */
-class LoginInfo extends ChatlogResProtocal
+class SignInfo extends AbsMessage
 {
-    public function getEvent(): string
-    {
-        return 'USER_LOGIN';
-    }
+    const MAX_PASS_WD_LENGTH = 18;
+    const MIN_PASS_WD_LENGTH = 4;
+    const MAX_NAME_LENGTH = 10;
 
     public static function stub(): array
     {
         return [
-            'id' => '',
             'name' => '',
-            'token' => '',
+            'password' => '',
         ];
     }
 

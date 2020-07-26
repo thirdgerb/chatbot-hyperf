@@ -7,7 +7,7 @@ namespace Commune\Chatlog\Database;
 use Carbon\Carbon;
 use Commune\Blueprint\Framework\Auth\Supervise;
 use Commune\Blueprint\Framework\ProcContainer;
-use Commune\Chatlog\SocketIO\ChatlogConfig;
+use Commune\Chatlog\ChatlogConfig;
 use Hyperf\Database\Schema\Blueprint;
 use Hyperf\Database\Query\Builder;
 use Hyperf\DbConnection\Db;

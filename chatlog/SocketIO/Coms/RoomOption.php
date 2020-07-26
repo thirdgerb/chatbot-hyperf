@@ -14,7 +14,6 @@ use Commune\Support\Option\AbsOption;
  * @property-read string $scene     房间显示的场景. 用于生成 Entry
  * @property-read string $title     房间对外的名称.
  * @property-read string $desc      房间的一句话介绍.
- * @property-read string $session   预定义的 sessionId. 一旦定义就属于公共房间了.
  * @property-read string $icon      预定义的图标.
  * @property-read bool $closable    是否可以关闭.
  * @property-read string $category  房间的分类. 给用户推荐时可以按分类来排列.
@@ -52,16 +51,17 @@ class RoomOption extends AbsOption
             'scene' => '',
             'title' => '',
             'desc' => '',
-            'session' => '',
             'icon' => '',
             'category' => '',
             'closable' => true,
 
             'bot' => true,
+
             'entry' => '',
 
             'level' => Supervise::GUEST,
-            'levelMode' => self::LEVEL_MODE_EXACTLY,
+            'levelMode' => self::LEVEL_MODE_ABOVE,
+            'private' => false,
 
             'supervised' => false,
 

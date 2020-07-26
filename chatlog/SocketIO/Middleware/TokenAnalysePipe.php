@@ -7,7 +7,7 @@ use Commune\Chatbot\Hyperf\Coms\SocketIO\EventPipe;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\SioRequest;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Hyperf\SocketIOServer\Socket;
 
 class TokenAnalysePipe implements EventPipe
@@ -57,27 +57,31 @@ class TokenAnalysePipe implements EventPipe
                 ?? $this->jwtFactory->validateTime($validator, $token);
 
             if ($error) {
-                $errorInfo = new ErrorInfo([
-                    'errcode' => ErrorInfo::UNAUTHORIZED,
-                    'errmsg' => $error
-                ]);
-                $res = $request->makeResponse($errorInfo);
-                $this->socket->emit($res->event, $res->toEmit());
-
-                return [];
+                return $this->unAuthorize(
+                    $error,
+                    $request,
+                    $this->socket
+                );
             }
 
             // 设置用户的信息
             $user = $this->jwtFactory->fetchUser($token);
             if (empty($user)) {
-                $errorInfo = new ErrorInfo([
-                    'errcode' => ErrorInfo::UNAUTHORIZED,
-                    'errmsg' => $error = 'user info not exists',
-                ]);
-                $this->socket->leaveAll();
+                return $this->unAuthorize(
+                    '用户信息不存在',
+                    $request,
+                    $this->socket
+                );
+            }
 
-                $request->makeResponse($errorInfo)->emit($this->socket);
-                return [];
+            $userId = $user->id;
+            $username = $user->name;
+            if (empty($userId) || empty($username)) {
+                return $this->unAuthorize(
+                    '登录信息不正确',
+                    $request,
+                    $this->socket
+                );
             }
 
             $request->with(UserInfo::class, $user);
@@ -90,4 +94,18 @@ class TokenAnalysePipe implements EventPipe
 
     }
 
+    protected function unAuthorize(
+        string $error,
+        SioRequest $request,
+        Socket $socket
+    )
+    {
+        $errorInfo = new ErrorInfo([
+            'errcode' => ErrorInfo::UNAUTHORIZED,
+            'errmsg' => $error,
+        ]);
+        $this->socket->leaveAll();
+        $request->makeResponse($errorInfo)->emit($this->socket);
+        return [];
+    }
 }

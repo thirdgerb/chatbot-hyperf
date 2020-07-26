@@ -4,14 +4,15 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
+use Commune\Chatlog\SocketIO\DTO\InputInfo;
 use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Middleware\RoomVerifyTrait;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
-use Commune\Chatlog\SocketIO\Protocal\Input;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
+use Commune\Chatlog\SocketIO\Protocal\UserChats;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
@@ -32,7 +33,7 @@ class InputHandler extends ChatlogEventHandler
     ): array
     {
         $user = $request->getTemp(UserInfo::class);
-        $input = Input::create($request->proto);
+        $input = InputInfo::create($request->proto);
 
         $scene = $input->scene;
         $session = $input->session;
@@ -74,10 +75,11 @@ class InputHandler extends ChatlogEventHandler
             $chatInfo = $roomService->createChatInfo(
                 $roomService->findRoom($scene),
                 $user,
-                true,
                 true
             );
-            $response = $request->makeResponse($chatInfo);
+
+            $protocal = new UserChats(['chats' => $chatInfo]);
+            $response = $request->makeResponse($protocal);
             $controller
                 ->to($roomService->getSupervisorSession())
                 ->emit($response->event, $response->toEmit());

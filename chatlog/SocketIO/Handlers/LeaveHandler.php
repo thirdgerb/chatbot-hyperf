@@ -9,9 +9,9 @@ use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
-use Commune\Chatlog\SocketIO\Protocal\Room;
+use Commune\Chatlog\SocketIO\DTO\RoomInfo;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
@@ -29,7 +29,7 @@ class LeaveHandler extends ChatlogEventHandler
         Socket $socket
     ): array
     {
-        $room = new Room($request->proto);
+        $room = new RoomInfo($request->proto);
         /**
          * @var UserInfo $user
          */

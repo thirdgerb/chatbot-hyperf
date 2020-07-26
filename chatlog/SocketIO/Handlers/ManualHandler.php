@@ -7,9 +7,10 @@ use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Middleware\RoomProtocalPipe;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
-use Commune\Chatlog\SocketIO\Protocal\Room;
+use Commune\Chatlog\SocketIO\DTO\RoomInfo;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
+use Commune\Chatlog\SocketIO\Protocal\UserChats;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
@@ -33,13 +34,14 @@ class ManualHandler extends ChatlogEventHandler
     ): array
     {
         $user = $request->getTemp(UserInfo::class);
-        $room = $request->getTemp(Room::class);
+        $room = $request->getTemp(RoomInfo::class);
 
         // 权限校验.
         $roomService = $this->getRoomService();
-        $chatInfo = $roomService->createChatInfo($room, $user, false, true);
+        $chatInfo = $roomService->createChatInfo($room, $user,  true);
 
-        $response = $request->makeResponse($chatInfo);
+        $protocal = new UserChats(['chats' => [$chatInfo]]);
+        $response = $request->makeResponse($protocal);
         $superviseSession = $roomService->getSupervisorSession();
 
         $socket->to($superviseSession)

@@ -234,7 +234,10 @@ abstract class AbsSIOAdapter implements Adapter, ChatlogMessageParser
             return $request->makeResponse($directive)->toEmit();
         }, $directives);
 
-        $this->packer->socket->emit(Directive::EVENT, ...$directives);
+        foreach ($directives as $directive) {
+
+            $this->packer->socket->emit(Directive::EVENT, ...$directives);
+        }
     }
 
     public function destroy(): void

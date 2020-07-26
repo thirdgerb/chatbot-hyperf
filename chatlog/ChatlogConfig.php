@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Commune\Chatlog\SocketIO;
+namespace Commune\Chatlog;
 
 use Commune\Chatlog\SocketIO\Coms\RoomOption;
 use Commune\Support\Option\Option;
@@ -30,8 +30,8 @@ use Commune\Support\Option\Option;
  *
  *
  * ## 房间相关.
- * @property-read string $supervisorScene       超管所在的房间场景.
  * @property-read RoomOption[] $rooms           系统定义的房间.
+ * @property-read string $supervisorScene       超管所在的房间场景.
  */
 interface ChatlogConfig extends Option
 {

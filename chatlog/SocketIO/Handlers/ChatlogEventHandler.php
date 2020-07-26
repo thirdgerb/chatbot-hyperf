@@ -4,23 +4,22 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
+use Commune\Blueprint\CommuneEnv;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsEventHandler;
+use Commune\Chatbot\Hyperf\Coms\SocketIO\ProtocalException;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\SioRequest;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\SioResponse;
 use Commune\Chatlog\Database\ChatlogMessageRepo;
 use Commune\Chatlog\Database\ChatlogUserRepo;
-use Commune\Chatlog\SocketIO\ChatlogConfig;
+use Commune\Chatlog\ChatlogConfig;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Coms\RoomService;
 use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
 use Commune\Chatlog\SocketIO\Messages\TextMessage;
-use Commune\Chatlog\SocketIO\Protocal\ChatInfo;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
-use Commune\Chatlog\SocketIO\Protocal\ChatlogSioResponse;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Chatlog\SocketIO\Protocal\QuitChat;
-use Commune\Chatlog\SocketIO\Protocal\Room;
 use Commune\Framework\IReqContainer;
 use Commune\Support\Pipeline\OnionPipeline;
 use Commune\Support\Uuid\HasIdGenerator;
@@ -84,23 +83,38 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
         $container->share(SioRequest::class, $request);
         $container->share(ChatlogSioRequest::class, $request);
 
-        // 是否要用中间件.
-        if (!empty($this->middlewares)) {
-            $pipes = new OnionPipeline($container, $this->middlewares);
-            $errors = $pipes->send($request, function(ChatlogSioRequest $request) use ($controller, $socket){
-                return $this->handle($request, $controller, $socket);
-            });
+        try {
 
-        } else {
-            $errors = $this->handle($request, $controller, $socket);
-        }
+            // 是否要用中间件.
+            if (!empty($this->middlewares)) {
+                $pipes = new OnionPipeline($container, $this->middlewares);
+                $errors = $pipes->send($request, function(ChatlogSioRequest $request) use ($controller, $socket){
+                    return $this->handle($request, $controller, $socket);
+                });
 
-        // 记录公共的错误信息日志. 这些是逻辑上的问题, 不是给用户的提示.
-        if (!empty($errors)) {
-            foreach ($errors as $key => $error) {
-                $this->logger->error(__METHOD__ . " failed. $key: $error");
+            } else {
+                $errors = $this->handle($request, $controller, $socket);
             }
+
+            // 记录公共的错误信息日志. 这些是逻辑上的问题, 不是给用户的提示.
+            if (!empty($errors)) {
+                foreach ($errors as $key => $error) {
+                    $this->logger->error(__METHOD__ . " failed. $key: $error");
+                }
+            }
+
+        } catch (ProtocalException $e) {
+            static::emitErrorInfo(
+                $e->getCode(),
+                $e->getMessage(),
+                $request,
+                $socket
+            );
+        } catch (\Throwable $e) {
+            $this->expReporter->report($e);
+            $socket->emit('error', $e->getMessage());
         }
+
     }
 
     /**
@@ -123,7 +137,14 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
 
         try {
             $data['event'] = $event;
-            return new ChatlogSioRequest($data);
+            $request = new ChatlogSioRequest($data);
+
+            if (CommuneEnv::isDebug()) {
+                $this
+                ->logger
+                ->debug("incoming event $event:" . $request->toJson());
+            }
+            return $request;
 
         } catch (\Throwable $e) {
             $error = get_class($e) . ': ' . $e->getMessage();
@@ -140,18 +161,20 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
 
     /**
      * 禁止行为.
+     * @param string $error
      * @param ChatlogSioRequest $request
      * @param Socket $socket
      * @return array
      */
     public static function forbidden(
+        string $error,
         ChatlogSioRequest $request,
         Socket $socket
     ) : array
     {
         return static::emitErrorInfo(
             ErrorInfo::FORBIDDEN,
-            '没有权限加入房间',
+            $error,
             $request,
             $socket
         );
@@ -195,26 +218,6 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
         ]);
 
         $request->makeResponse($error)->emit($socket);
-        return [];
-    }
-
-    public static function emitChatInfo(
-        SioRequest $request,
-        Socket $socket,
-        ChatInfo ...$chats
-    ) : array
-    {
-        if (empty($chats)) {
-            return [];
-        }
-
-        $event = $chats[0]->getEvent();
-
-        $responses = array_map(function(ChatInfo $chat) use ($request){
-            return $request->makeResponse($chat)->toEmit();
-        }, $chats);
-
-        $socket->emit($event, ...$responses);
         return [];
     }
 
@@ -276,8 +279,9 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
     ) : void
     {
         $session = $this->getRoomService()->getSupervisorSession();
+        $text = TextMessage::instance($message);
         $response = $this->makeSystemMessage(
-            $message,
+            $text,
             $session,
             $request
         );
@@ -286,7 +290,7 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
 
 
     public function makeSystemMessage(
-        string $message,
+        ChatlogMessage $message,
         string $session,
         SioRequest $request
     ) : SioResponse

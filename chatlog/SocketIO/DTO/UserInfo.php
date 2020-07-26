@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Commune\Chatlog\SocketIO\Protocal;
+namespace Commune\Chatlog\SocketIO\DTO;
 
 
 use Commune\Blueprint\Framework\Auth\Supervise;

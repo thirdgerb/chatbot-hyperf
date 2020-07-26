@@ -1,8 +1,7 @@
 <?php
 
 
-namespace Commune\Chatlog\SocketIO\Protocal;
-
+namespace Commune\Chatlog\SocketIO\DTO;
 
 use Commune\Support\Message\AbsMessage;
 
@@ -10,7 +9,7 @@ use Commune\Support\Message\AbsMessage;
  * @property-read string $session
  * @property-read string $scene
  */
-class Room extends AbsMessage
+class RoomInfo extends AbsMessage
 {
     public static function stub(): array
     {
@@ -27,7 +26,7 @@ class Room extends AbsMessage
 
     public static function validate(array $data): ? string /* errorMsg */
     {
-        if (empty($data['session'])) {
+        if (empty($data['session']) || empty($data['scene'])) {
             return "session should not be empty";
         }
         return parent::validate($data);

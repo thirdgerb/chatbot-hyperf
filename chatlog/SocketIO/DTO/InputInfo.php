@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Commune\Chatlog\SocketIO\Protocal;
+namespace Commune\Chatlog\SocketIO\DTO;
 
 
 use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
@@ -15,7 +15,7 @@ use Commune\Support\Message\AbsMessage;
  * @property-read bool $bot
  * @property-read ChatlogMessage $message
  */
-class Input extends AbsMessage
+class InputInfo extends AbsMessage
 {
     public static function stub(): array
     {

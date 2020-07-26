@@ -13,8 +13,8 @@ use Commune\Chatlog\Database\ChatlogMessageRepo;
 use Commune\Chatlog\SocketIO\Coms\RoomService;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
-use Commune\Chatlog\SocketIO\Protocal\Input;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\SocketIO\DTO\InputInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
@@ -22,7 +22,7 @@ class ChatlogSIOPacker implements Packer
 {
 
     /**
-     * @var Input
+     * @var InputInfo
      */
     public $input;
 

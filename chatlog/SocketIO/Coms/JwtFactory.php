@@ -4,8 +4,8 @@
 namespace Commune\Chatlog\SocketIO\Coms;
 
 
-use Commune\Chatlog\SocketIO\ChatlogConfig;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\ChatlogConfig;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Parser;
 use Lcobucci\JWT\Signer;

@@ -6,7 +6,7 @@ namespace Commune\Chatlog\Test\SocketIO;
 
 use Commune\Chatlog\ChatlogSocketIOServiceProvider;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
-use Commune\Chatlog\SocketIO\Protocal\UserInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key;
 use PHPUnit\Framework\TestCase;
