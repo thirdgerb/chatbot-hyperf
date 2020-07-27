@@ -51,8 +51,9 @@ class LeaveHandler extends ChatlogEventHandler
 
         // 通知其它用户有人退出登录.
         $text = TextMessage::instance($user->name . ' 离开了对话');
-        $this->makeSystemResponse($text, $session, $request)->emit($socket);
+        $response = $this->makeSystemResponse($text, $session, $request);
 
+        $socket->to($session)->emit($response->event, $response->toEmit());
         return [];
     }
 
