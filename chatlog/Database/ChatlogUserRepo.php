@@ -47,7 +47,7 @@ class ChatlogUserRepo
         $table->string('user_id');
         $table->string('name');
         $table->string('password_hash');
-        $table->tinyInteger('level');
+        $table->tinyInteger('level', false, true);
         $table->timestamp('created_at');
 
         $table->unique('user_id', 'unq_user');

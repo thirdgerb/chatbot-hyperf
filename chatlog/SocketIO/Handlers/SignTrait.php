@@ -7,6 +7,7 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\ProtocalException;
 use Commune\Chatlog\SocketIO\Coms\RoomOption;
 use Commune\Chatlog\SocketIO\Coms\RoomService;
+use Commune\Chatlog\SocketIO\Messages\TextMessage;
 use Commune\Chatlog\SocketIO\Protocal\LoginInfo;
 use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
@@ -133,19 +134,6 @@ trait SignTrait
         // 其实本来 hyperf socket.io 也会干这个事情.
         // 不过那个房间要感知挺麻烦的, 还会随着掉线而变动.
         $socket->join($user->id);
-//
-//        $roomService = $this->getRoomService();
-//
-//        // autoJoins
-//        $autoJoins = $roomService->autoJoinRoomsFor($user);
-//        $autoJoins = $this->roomToChat($autoJoins, $user, $roomService, true);
-//
-//        static::emitChatInfo($request, $socket, ...$autoJoins);
-//
-//        $recommends = $roomService->recommendRoomsFor($user);
-//        $recommends = $this->roomToChat($recommends, $user, $roomService, false);
-//
-//        static::emitChatInfo($request, $socket, ...$recommends);
         return [];
     }
 

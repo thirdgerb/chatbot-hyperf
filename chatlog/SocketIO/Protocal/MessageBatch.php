@@ -7,6 +7,8 @@ namespace Commune\Chatlog\SocketIO\Protocal;
 use Commune\Chatlog\SocketIO\DTO\InputInfo;
 use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
+use Commune\Support\Uuid\HasIdGenerator;
+use Commune\Support\Uuid\IdGeneratorHelper;
 
 /**
  * 消息批次.
@@ -21,8 +23,10 @@ use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
  * @property array $suggestions
  * @property int $createdAt
  */
-class MessageBatch extends ChatlogResProtocal
+class MessageBatch extends ChatlogResProtocal implements HasIdGenerator
 {
+    use IdGeneratorHelper;
+
     const MODE_BOT = 1;
     const MODE_USER = 2;
     const MODE_SYSTEM = 3;
@@ -39,8 +43,17 @@ class MessageBatch extends ChatlogResProtocal
             'suggestions' => [],
             'messages' => [
             ],
-            'createdAt' => 0
+            'createdAt' => time(),
         ];
+    }
+
+    public static function fromSystem(string $sessionId, ChatlogMessage ...$messages) : self
+    {
+        return new static([
+            'mode' => self::MODE_SYSTEM,
+            'session' => $sessionId,
+            'messages' => $messages,
+        ]);
     }
 
     public static function fromInput(
@@ -75,6 +88,12 @@ class MessageBatch extends ChatlogResProtocal
         return [
             'messages[]' => ChatlogMessage::class
         ];
+    }
+
+    public function __set_batchId(string $name, $value) : void
+    {
+        $value = empty($value) ? $this->createUuId() : $value;
+        $this->_data[$name] = $value;
     }
 
     public function isEmpty(): bool

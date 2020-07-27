@@ -70,6 +70,7 @@ class ChatlogSocketIOServiceProvider extends ServiceProvider
                 'INPUT' => Handlers\InputHandler::class,
                 'MANUAL' => Handlers\ManualHandler::class,
                 'QUERY_CHATS'=> Handlers\QueryChatsHandler::class,
+                'QUERY_MESSAGES' => Handlers\QueryMessagesHandler::class,
             ],
 
             'jwtSigner' => Sha256::class,

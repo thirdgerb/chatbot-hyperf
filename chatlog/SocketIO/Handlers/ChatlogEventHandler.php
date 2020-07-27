@@ -112,7 +112,10 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
             );
         } catch (\Throwable $e) {
             $this->expReporter->report($e);
-            $socket->emit('error', $e->getMessage());
+            $socket->emit(
+                'error',
+                get_class($e) . ':' . $e->getMessage()
+            );
         }
 
     }
@@ -280,7 +283,7 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
     {
         $session = $this->getRoomService()->getSupervisorSession();
         $text = TextMessage::instance($message);
-        $response = $this->makeSystemMessage(
+        $response = $this->makeSystemResponse(
             $text,
             $session,
             $request
@@ -289,7 +292,7 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
     }
 
 
-    public function makeSystemMessage(
+    public function makeSystemResponse(
         ChatlogMessage $message,
         string $session,
         SioRequest $request

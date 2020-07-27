@@ -103,7 +103,7 @@ class ChatlogMessageRepo
      * @param bool $forward
      * @return MessageBatch[]
      */
-    public function fetchMessagesByTime(
+    public function fetchMessagesByBatchId(
         string $session,
         int $limit,
         string $batchId = null,
@@ -199,7 +199,7 @@ class ChatlogMessageRepo
     {
         return $collection
             ->map(function($obj) {
-                return Babel::unserialize($obj);
+                return Babel::unserialize($obj->data);
             })->filter(function($obj) {
                 return $obj instanceof MessageBatch;
             })->sort(function(MessageBatch $a, MessageBatch $b) {
@@ -211,7 +211,7 @@ class ChatlogMessageRepo
     public function findVernier(string $batchId) : ? string
     {
         $data = $this->newBuilder()
-            ->where('batchId', '=', $batchId)
+            ->where('batch_id', '=', $batchId)
             ->first(['id']);
 
         return $data ? $data->id : null;

@@ -7,6 +7,7 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 use Commune\Chatlog\SocketIO\DTO\InputInfo;
 use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
+use Commune\Chatlog\SocketIO\Middleware\RoomProtocalPipe;
 use Commune\Chatlog\SocketIO\Middleware\RoomVerifyTrait;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
@@ -18,12 +19,11 @@ use Hyperf\SocketIOServer\Socket;
 
 class InputHandler extends ChatlogEventHandler
 {
-    use RoomVerifyTrait;
-
     protected $middlewares =[
         RequestGuardPipe::class,
         TokenAnalysePipe::class,
         AuthorizePipe::class,
+        RoomProtocalPipe::class,
     ];
 
     function handle(
@@ -36,20 +36,6 @@ class InputHandler extends ChatlogEventHandler
         $input = InputInfo::create($request->proto);
 
         $scene = $input->scene;
-        $session = $input->session;
-
-        $roomService = $this->getRoomService();
-        $errors = $this->verifyRoom(
-            $scene,
-            $session,
-            $roomService,
-            $request,
-            $socket
-        );
-
-        if (!empty($errors)) {
-            return $errors;
-        }
 
         // 准备要发送的消息.
         $inputBatch = MessageBatch::fromInput($input, $user);
@@ -69,6 +55,7 @@ class InputHandler extends ChatlogEventHandler
             $this->deliverToChatbot($inputBatch, $request, $controller, $socket);
         }
 
+        $roomService = $this->getRoomService();
 
         // 如果是监控中的场景, 通知管理员.
         if ($roomService->isSupervisorScene($scene)) {
