@@ -63,6 +63,7 @@ class RegisterHandler extends ChatlogEventHandler implements HasIdGenerator
             $level = Supervise::USER
         );
 
+
         if (!$success) {
             return $this->emitErrorInfo(
                 ErrorInfo::HOST_REQUEST_FAIL,
@@ -77,6 +78,8 @@ class RegisterHandler extends ChatlogEventHandler implements HasIdGenerator
             'name' => $username,
             'level' => $level
         ]);
+
+        var_dump($userInfo);
 
         $this->informSupervisor(
             "用户注册: $username",

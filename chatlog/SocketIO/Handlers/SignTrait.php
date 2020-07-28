@@ -5,10 +5,7 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 
 
 use Commune\Chatbot\Hyperf\Coms\SocketIO\ProtocalException;
-use Commune\Chatlog\SocketIO\Coms\RoomOption;
-use Commune\Chatlog\SocketIO\Coms\RoomService;
-use Commune\Chatlog\SocketIO\Messages\TextMessage;
-use Commune\Chatlog\SocketIO\Protocal\LoginInfo;
+use Commune\Chatlog\SocketIO\Protocal\UserLogin;
 use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
@@ -40,11 +37,12 @@ trait SignTrait
         Socket $socket
     ) : array
     {
-        $login = new LoginInfo([
+        $login = new UserLogin([
             'id' => $user->id,
             'name' => $user->name,
             'token' => $token
         ]);
+        var_dump($login->toArray());
 
         // 发送已登录的消息.
         $response = $request->makeResponse($login);
@@ -86,6 +84,16 @@ trait SignTrait
             return [];
         }
 
+        if ($nameLength < 1) {
+            $this->emitErrorInfo(
+                ErrorInfo::UNPROCESSABLE_ENTITY,
+                "用户名为空",
+                $request,
+                $socket
+            );
+            return [];
+        }
+
         $password = $sign->password;
         $length = strlen($password);
 
@@ -99,10 +107,10 @@ trait SignTrait
             return [];
         }
 
-        if ($length > 16) {
+        if ($length > 32) {
             $this->emitErrorInfo(
                 ErrorInfo::UNPROCESSABLE_ENTITY,
-                '密码最多16个字符.',
+                '密码最多32个字符.',
                 $request,
                 $socket
             );
@@ -135,18 +143,5 @@ trait SignTrait
         // 不过那个房间要感知挺麻烦的, 还会随着掉线而变动.
         $socket->join($user->id);
         return [];
-    }
-
-    public function roomToChat(
-        array $rooms,
-        UserInfo $user,
-        RoomService $service,
-        bool $autoJoin
-    ) : array
-    {
-        return array_values(array_map(function(RoomOption $option) use ($service, $user, $autoJoin){
-          return $service->createChatInfo($option, $user, $autoJoin, false);
-        }, $rooms));
-
     }
 }

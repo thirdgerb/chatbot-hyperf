@@ -30,7 +30,7 @@ class SignInfo extends AbsMessage
 
     public function isEmpty(): bool
     {
-        return false;
+        return empty($this->_data['name']) && empty($this->_data['password']);
     }
 
 

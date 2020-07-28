@@ -291,8 +291,8 @@ class RoomService
             'scene' => $option->scene,
             'icon' => $option->icon,
             'session' => $this->makeSessionId($option, $user),
-            'closable' => $option->closable,
-            'autoJoin' => $option->autoJoin && !$toSupervisor,
+            'closable' => $toSupervisor || $option->closable,
+            'autoJoin' => !$toSupervisor && $option->autoJoin ,
             'bot' => $option->bot,
         ]);
     }

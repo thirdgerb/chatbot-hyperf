@@ -63,6 +63,7 @@ class QueryChatsHandler extends ChatlogEventHandler
             'category' => $cate,
             'all' => $all,
             'chats' => $chats,
+            'init' => true,
         ]);
 
         $request->makeResponse($protocal)->emit($socket);

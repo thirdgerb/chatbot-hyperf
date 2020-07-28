@@ -40,7 +40,7 @@ class LeaveHandler extends ChatlogEventHandler
         $socket->leave($session);
 
         // 如果用户本来无权限加入房间, 就有鬼了.
-        if ($this->getRoomService()->verifyUser($room->scene, $user, $session)) {
+        if (!$this->getRoomService()->verifyUser($room->scene, $user, $session)) {
             $this->logger->warning(
                 'user ' . $user->toJson()
                 . ' try to leave room ' . $room->toJson()

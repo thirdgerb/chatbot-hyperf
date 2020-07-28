@@ -34,11 +34,15 @@ class ManualHandler extends ChatlogEventHandler
     ): array
     {
         $user = $request->getTemp(UserInfo::class);
-        $room = $request->getTemp(RoomInfo::class);
+        /**
+         * @var RoomInfo $roomInfo
+         */
+        $roomInfo = $request->getTemp(RoomInfo::class);
 
         // 权限校验.
         $roomService = $this->getRoomService();
-        $chatInfo = $roomService->createChatInfo($room, $user,  true);
+        $roomOption = $roomService->findRoom($roomInfo->scene);
+        $chatInfo = $roomService->createChatInfo($roomOption, $user,  true);
 
         $protocal = new UserChats(['chats' => [$chatInfo]]);
         $response = $request->makeResponse($protocal);

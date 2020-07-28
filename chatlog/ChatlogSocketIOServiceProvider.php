@@ -66,11 +66,13 @@ class ChatlogSocketIOServiceProvider extends ServiceProvider
                 'SIGN' => Handlers\SignHandler::class,
                 'REGISTER' => Handlers\RegisterHandler::class,
                 'JOIN' => Handlers\JoinHandler::class,
+                'USER_LOGOUT' => Handlers\UserLogoutHandler::class,
                 'LEAVE' => Handlers\LeaveHandler::class,
                 'INPUT' => Handlers\InputHandler::class,
                 'MANUAL' => Handlers\ManualHandler::class,
                 'QUERY_CHATS'=> Handlers\QueryChatsHandler::class,
                 'QUERY_MESSAGES' => Handlers\QueryMessagesHandler::class,
+                'QUERY_SCENE' => Handlers\QuerySceneHandler::class,
             ],
 
             'jwtSigner' => Sha256::class,

@@ -59,6 +59,10 @@ class ChatlogUserRepo
         return Db::connection($this->config->dbConnection)->table(self::TABLE_NAME);
     }
 
+    /**
+     * @param string $name
+     * @return bool
+     */
     public function userNameExists(string $name) : bool
     {
         return $this->newBuilder()

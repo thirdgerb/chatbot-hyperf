@@ -16,6 +16,7 @@ class UserChats extends ChatlogResProtocal
     {
         return [
             'category' => '',
+            'init' => false,
             'all' => false,
             'chats' => [],
         ];

@@ -15,6 +15,7 @@ use Commune\Support\Uuid\IdGeneratorHelper;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
+use phpDocumentor\Reflection\DocBlock\Tags\Since;
 
 
 /**
@@ -111,7 +112,6 @@ class SignHandler extends ChatlogEventHandler implements HasIdGenerator
         $name = $sign->name;
         $uuid = $this->createUuId();
         $user = $this->createGuest($uuid, $name);
-
         $this->informSupervisor(
             "访客登录: $name",
             $request,
@@ -137,7 +137,6 @@ class SignHandler extends ChatlogEventHandler implements HasIdGenerator
         string $name
     ) : UserInfo
     {
-
         return new UserInfo([
             'id' => $uuid,
             'name' => $name,

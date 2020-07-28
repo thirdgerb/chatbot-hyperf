@@ -8,7 +8,6 @@ use Commune\Chatlog\SocketIO\DTO\InputInfo;
 use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
 use Commune\Chatlog\SocketIO\Middleware\RoomProtocalPipe;
-use Commune\Chatlog\SocketIO\Middleware\RoomVerifyTrait;
 use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
@@ -58,14 +57,14 @@ class InputHandler extends ChatlogEventHandler
         $roomService = $this->getRoomService();
 
         // 如果是监控中的场景, 通知管理员.
-        if ($roomService->isSupervisorScene($scene)) {
+        if ($roomService->isRoomSupervised($scene)) {
             $chatInfo = $roomService->createChatInfo(
                 $roomService->findRoom($scene),
                 $user,
                 true
             );
 
-            $protocal = new UserChats(['chats' => $chatInfo]);
+            $protocal = new UserChats(['chats' => [$chatInfo]]);
             $response = $request->makeResponse($protocal);
             $controller
                 ->to($roomService->getSupervisorSession())

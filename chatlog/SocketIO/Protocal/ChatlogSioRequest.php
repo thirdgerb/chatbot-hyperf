@@ -76,9 +76,7 @@ class ChatlogSioRequest extends AbsMessage implements SioRequest, HasIdGenerator
 
     public static function relations(): array
     {
-        return [
-            'user' => UserInfo::class
-        ];
+        return [];
     }
 
 
