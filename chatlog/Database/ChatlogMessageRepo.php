@@ -114,7 +114,6 @@ class ChatlogMessageRepo
             throw new InvalidArgumentException("Chatlog Demo limit should between 1 to 100");
         }
 
-
         if (isset($batchId)) {
             $vernier = $this->findVernier($batchId);
             // 如果游标不存在.
@@ -122,9 +121,10 @@ class ChatlogMessageRepo
                 return [];
             }
 
-            return $forward
+            $results = $forward
                 ? $this->fetchNearestMessagesAfterVernier($session, $vernier, $limit)
                 : $this->fetchNearestMessagesBeforeVernier($session, $vernier, $limit);
+            return $results;
         }
 
         return $forward

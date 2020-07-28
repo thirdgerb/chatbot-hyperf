@@ -42,7 +42,6 @@ trait SignTrait
             'name' => $user->name,
             'token' => $token
         ]);
-        var_dump($login->toArray());
 
         // 发送已登录的消息.
         $response = $request->makeResponse($login);

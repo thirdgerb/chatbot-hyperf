@@ -79,8 +79,6 @@ class RegisterHandler extends ChatlogEventHandler implements HasIdGenerator
             'level' => $level
         ]);
 
-        var_dump($userInfo);
-
         $this->informSupervisor(
             "用户注册: $username",
             $request,
