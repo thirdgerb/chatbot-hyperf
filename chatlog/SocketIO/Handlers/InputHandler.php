@@ -57,7 +57,10 @@ class InputHandler extends ChatlogEventHandler
         $roomService = $this->getRoomService();
 
         // 如果是监控中的场景, 通知管理员.
-        if ($roomService->isRoomSupervised($scene)) {
+        if (
+            $roomService->isRoomSupervised($scene)
+            && !$roomService->isSupervisor($user)
+        ) {
             $chatInfo = $roomService->createChatInfo(
                 $roomService->findRoom($scene),
                 $user,
