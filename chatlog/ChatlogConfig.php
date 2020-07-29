@@ -10,6 +10,10 @@ use Commune\Support\Option\Option;
  * @property-read string $appName               应用的名称.
  * @property-read bool $debug
  *
+ * ## 机器人相关.
+ *
+ * @property-read string $adapterName
+ *
  * ## jwt 相关
  * @property-read string $jwtSigner             Jwt Signer 类名
  * @property-read string $jwtSecret             Jwt 密钥

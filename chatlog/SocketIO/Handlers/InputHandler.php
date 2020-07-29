@@ -49,14 +49,10 @@ class InputHandler extends ChatlogEventHandler
             $inputBatch
         );
 
-        // 如果发送给机器人.
-        if ($input->bot) {
-            $this->deliverToChatbot($inputBatch, $request, $controller, $socket);
-        }
-
         $roomService = $this->getRoomService();
 
         // 如果是监控中的场景, 通知管理员.
+        // 这个环节是 information, 可以独立成模块.
         if (
             $roomService->isRoomSupervised($scene)
             && !$roomService->isSupervisor($user)
@@ -72,6 +68,18 @@ class InputHandler extends ChatlogEventHandler
             $controller
                 ->to($roomService->getSupervisorSession())
                 ->emit($response->event, $response->toEmit());
+        }
+
+
+        // 如果发送给机器人.
+        if ($input->bot) {
+            $this->deliverToChatbot(
+                $request,
+                $user,
+                $input,
+                $controller,
+                $socket
+            );
         }
 
         return [];

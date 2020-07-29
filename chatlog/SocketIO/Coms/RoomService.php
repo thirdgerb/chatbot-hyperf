@@ -5,9 +5,13 @@ namespace Commune\Chatlog\SocketIO\Coms;
 
 
 use Commune\Blueprint\Framework\Auth\Supervise;
+use Commune\Blueprint\Framework\ProcContainer;
 use Commune\Chatlog\ChatlogConfig;
+use Commune\Chatlog\SocketIO\Coms\Room\EntryParser;
 use Commune\Chatlog\SocketIO\DTO\ChatInfo;
+use Commune\Chatlog\SocketIO\DTO\InputInfo;
 use Commune\Chatlog\SocketIO\DTO\UserInfo;
+use Commune\Container\ContainerContract;
 use Commune\Contracts\Log\ConsoleLogger;
 
 /**
@@ -31,11 +35,23 @@ class RoomService
     protected $console;
 
     /**
-     * RoomService constructor.
-     * @param ChatlogConfig $config
+     * @var ContainerContract
      */
-    public function __construct(ChatlogConfig $config, ConsoleLogger $console)
+    protected $container;
+
+    /**
+     * RoomService constructor.
+     * @param ProcContainer $container
+     * @param ChatlogConfig $config
+     * @param ConsoleLogger $console
+     */
+    public function __construct(
+        ProcContainer $container,
+        ChatlogConfig $config,
+        ConsoleLogger $console
+    )
     {
+        $this->container = $container;
         $this->config = $config;
         $this->console = $console;
 
@@ -297,6 +313,38 @@ class RoomService
         ]);
     }
 
+    /*--------- parser ----------*/
 
+    /**
+     * @param InputInfo $input
+     * @param UserInfo $user
+     * @return string
+     */
+    public function parseEntry(InputInfo $input, UserInfo $user) : string
+    {
+        $scene = $input->scene;
+        $room = $this->findRoom($scene);
 
+        if (empty($room)) {
+            return '';
+        }
+        $entry = $room->entryParser;
+
+        // 认为是一个 callable 对象.
+        if (is_a($entry, EntryParser::class, TRUE)) {
+            /**
+             * @var EntryParser $caller
+             */
+            $caller = $this->container->make($entry);
+            return $caller($room, $input, $user);
+        }
+
+        // 默认作为字符串来返回.
+        return $entry;
+    }
+
+    public function getRoomBotId(RoomOption $room) : string
+    {
+
+    }
 }

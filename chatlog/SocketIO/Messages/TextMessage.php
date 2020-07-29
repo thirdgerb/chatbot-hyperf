@@ -3,10 +3,6 @@
 
 namespace Commune\Chatlog\SocketIO\Messages;
 
-use Commune\Message\Host\Convo\IText;
-use Commune\Protocals\HostMsg;
-
-
 /**
  * @property-read string $id
  * @property-read string $type
@@ -29,8 +25,4 @@ class TextMessage extends ChatlogMessage
         ];
     }
 
-    public function toHostMsg() : HostMsg
-    {
-        return IText::instance($this->text);
-    }
 }

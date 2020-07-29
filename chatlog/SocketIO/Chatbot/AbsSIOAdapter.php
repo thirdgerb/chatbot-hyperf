@@ -12,19 +12,21 @@ use Commune\Blueprint\Platform\Adapter;
 use Commune\Chatlog\SocketIO\Protocal\Directive;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Kernel\Protocals\IShellInputRequest;
+use Commune\Message\Intercom\IInputMsg;
+use Commune\Protocals\Comprehension;
 use Commune\Protocals\Intercom\InputMsg;
 use Commune\Support\Utils\TypeUtils;
 
-abstract class AbsSIOAdapter implements Adapter, ChatlogMessageParser
+abstract class AbsSIOAdapter implements Adapter
 {
 
     /**
-     * @var ChatlogSIOPacker
+     * @var ChatlogInputPacker
      */
     protected $packer;
 
     /**
-     * @var ShellInputRequest
+     * @var ShellInputRequest|null
      */
     protected $shellRequest;
 
@@ -38,46 +40,69 @@ abstract class AbsSIOAdapter implements Adapter, ChatlogMessageParser
      */
     protected $invalid = null;
 
+
     /**
      * SIOAdapter constructor.
-     * @param ChatlogSIOPacker $packer
+     * @param ChatlogInputPacker $packer
      * @param string $appId
      */
-    public function __construct(ChatlogSIOPacker $packer, string $appId)
+    public function __construct(
+        ChatlogInputPacker $packer,
+        string $appId
+    )
     {
         $this->packer = $packer;
         $this->appId = $appId;
 
-        $error = $this->validateInput($this->packer->input, $this->packer->user);
+        $parser = $this->getParser();
+        $error = $parser->validatePacker();
+
         if ($error) {
             $this->invalid = $error;
-        } else {
-            $input = $this->makeInputMsg($this->packer->$input, $this->packer->user);
-            $this->shellRequest = $this->makeRequest($input);
+
+        } elseif($parser->hasRequest()) {
+            $input = $this->makeInputMsg();
+            $entry = $parser->parseEntry();
+            $env = $parser->parseEnv();
+            $this->shellRequest = $this->makeRequest($input, $entry, $env);
         }
     }
 
+
+    abstract public function getParser() : ChatlogMessageParser;
 
     public function isInvalid(): ? string
     {
         return $this->invalid;
     }
 
-
-    protected function makeRequest(InputMsg $input) : AppRequest
+    protected function makeInputMsg() : InputMsg
     {
-        $env = $this->parseEnv(
-            $this->packer->request,
-            $this->packer->input,
-            $this->packer->user
+        return IInputMsg::instance(
+            $this->getParser()->parseHostMsg(),
+            $this->packer->input->session,
+            $this->packer->user->id,
+            $this->packer->user->name,
+            '',
+            null,
+            $this->packer->input->message->id
         );
+    }
+
+    protected function makeRequest(
+        InputMsg $input,
+        string $entry,
+        array $env,
+        Comprehension $comprehension = null
+    ) : AppRequest
+    {
 
         return IShellInputRequest::instance(
             false,
             $input,
-            $this->packer->getEntry(),
+            $entry,
             $env,
-            null,
+            $comprehension,
             $this->packer->request->trace
         );
     }
@@ -99,23 +124,43 @@ abstract class AbsSIOAdapter implements Adapter, ChatlogMessageParser
             $this->packer->fail("invalid response from chatbot, expect $expect, $given given");
             return;
         }
+        $parser = $this->getParser();
 
-        // 意图处理.
-        $intents = $response->getIntents();
-        // 先接纳所有的意图.
-        foreach ($intents as $intent) {
-            $stop = $this->acknowledgeIntent($intent, $response);
-            if ($stop) {
-                $stop();
-                return;
+        $logs = $this->acknowledgeIntents($parser, $response)
+            ?? $this->handleOutputs($parser, $response);
+
+        if (!empty($logs)) {
+            $logger = $this->packer->platform->getLogger();
+            foreach ($logs as list($level, $log)) {
+                $logger->info($level, $log);
             }
         }
 
-        // 处理输出消息.
-        $this->handleShellOutputs($response);
+        return;
     }
 
-    protected function handleShellOutputs(ShellOutputResponse $response) : void
+    protected function acknowledgeIntents(
+        ChatlogMessageParser $parser,
+        ShellOutputResponse $response
+    ) : ? array
+    {
+        // 意图处理.
+        $intents = $response->getIntents();
+
+        // 先接纳所有的意图.
+        foreach ($intents as $intent) {
+            $stop = $parser->acknowledgeIntent($intent, $response);
+            if ($stop) {
+                return $stop();
+            }
+        }
+        return null;
+    }
+
+    protected function handleOutputs(
+        ChatlogMessageParser $parser,
+        ShellOutputResponse $response
+    ) : array
     {
         $outputs = $response->getOutputs();
 
@@ -130,26 +175,24 @@ abstract class AbsSIOAdapter implements Adapter, ChatlogMessageParser
         $lastMode  = null;
 
         foreach ($outputs as $output) {
-
             // 按机制进行过滤处理.
-            if (!$this->filterIntercomMessage($output)) {
+            if (!$parser->filterIntercomMessage($output)) {
                 continue;
             }
-
             // 先确定消息的类型.
-            $mode = $this->parseMessageMode($output);
+            $mode = $parser->parseMessageMode($output);
 
             // 开启一个新的 batch.
             if (
-                empty($batch)
-                || $lastMode === MessageBatch::MODE_SYSTEM
+                empty($batch) // 这是第一个 batch
                 || $mode === MessageBatch::MODE_SYSTEM    //系统消息都独立一条.
-                || $output->getCreatorId() !== $creatorId
+                || $lastMode === MessageBatch::MODE_SYSTEM // 上一条已经是系统消息了.
+                || $output->getCreatorId() !== $creatorId // 不是同一个 creator
             ) {
                 $batch = new MessageBatch([
                     'mode' => $mode,
                     'session' => $response->getSessionId(),
-                    'batchId' => $output->getMessageId(),
+                    'batchId' => $output->getMessageId(), // 用第一条消息的 id 作为batchId
                     'creatorId' => $output->getCreatorId(),
                     'creatorName' => $output->getCreatorName(),
                     'createdAt' => $output->getDeliverAt(),
@@ -159,34 +202,64 @@ abstract class AbsSIOAdapter implements Adapter, ChatlogMessageParser
             $lastMode = $mode;
 
             // 只保留最后一个 context.
-            if ($this->isContextOutput($output)) {
-                $batch->context = $this->parseContextOutput($output);
+            if (
+                $mode === MessageBatch::MODE_BOT
+                && $parser->isContextOutput($output)
+            ) {
+                $batch->context = $parser->parseContextOutput($output);
                 continue;
             }
 
             // 指令另外保存.
-            if ($this->isDirective($output)) {
-                $directives = $this->parseDirective($directives, $output);
+            if ($parser->isDirective($output)) {
+                $directives = $parser->parseDirective($directives, $output);
                 continue;
             }
 
             // 保留最后一个 suggestions
-            if ($this->hasSuggestions($output)) {
-                $batch->suggestions = $this->parseSuggestions($output);
+            if ($parser->hasSuggestions($output)) {
+                $batch->suggestions = $parser->parseSuggestions($output);
             }
 
-            $rendered = $this->renderMessage($output);
+            $rendered = $parser->renderMessage($output);
             $batch->addMessages(...$rendered);
             $batches[$batch->batchId] = $batch;
         }
 
         // 发送响应. 采取广播的方式.
+        $batches = $this->parseBatches($batches);
         $this->deliverShellResponse($batches);
 
         // 发送命令给客户端自身.
         $this->deliverDirectives($directives);
+        return [];
     }
 
+    public function parseBatches(array $batches) : array
+    {
+
+        $service = $this->packer->factory->getRoomService();
+        $input = $this->packer->input;
+        $room = $service->findRoom($input->scene);
+        $botId = $room->getBotId($input->session);
+        $botName = $room->botName;
+
+        $batches = array_values(
+            array_map(
+                function(MessageBatch $message) use ($botId, $botName){
+                    $creatorId = $message->creatorId;
+                    if (empty($creatorId)) {
+                        $message->creatorId = $botId;
+                        $message->creatorName = $botName;
+                    }
+                    return $message;
+                },
+                $batches
+            )
+        );
+
+        return $batches;
+    }
 
     /**
      * 发送消息.
@@ -199,14 +272,16 @@ abstract class AbsSIOAdapter implements Adapter, ChatlogMessageParser
         }
 
         $request = $this->packer->request;
+        $factory = $this->packer->factory;
+
+        // 保存消息.
+        $factory
+            ->getMessageRepo()
+            ->saveBatch($this->packer->shell->getId(), ...$batches);
+
         foreach ($batches as $batch) {
-
-            $this->packer
-                ->messageRepo
-                ->saveBatch($batch);
-
+            // 群发响应. 而且是逐条发.
             $response = $request->makeResponse($batch);
-
             $this
                 ->packer
                 ->emitter
@@ -216,7 +291,6 @@ abstract class AbsSIOAdapter implements Adapter, ChatlogMessageParser
                     $response->toEmit()
                 );
         }
-
     }
 
     /**
@@ -230,13 +304,11 @@ abstract class AbsSIOAdapter implements Adapter, ChatlogMessageParser
         }
 
         $request = $this->packer->request;
-        $directives = array_map(function($directive) use ($request) {
-            return $request->makeResponse($directive)->toEmit();
-        }, $directives);
 
+        // 命令只对自身有效.
+        $socket = $this->packer->socket;
         foreach ($directives as $directive) {
-
-            $this->packer->socket->emit(Directive::EVENT, ...$directives);
+            $request->makeResponse($directive)->emit($socket);
         }
     }
 

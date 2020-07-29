@@ -8,6 +8,7 @@ use Commune\Blueprint\CommuneEnv;
 use Commune\Blueprint\Exceptions\CommuneLogicException;
 use Commune\Chatlog\Database\ChatlogMessageRepo;
 use Commune\Chatlog\Database\ChatlogUserRepo;
+use Commune\Chatlog\SocketIO\Chatbot\ChatlogInputAdapter;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Coms\RoomOption;
 use Commune\Chatlog\SocketIO\Coms\RoomService;
@@ -21,6 +22,10 @@ use Lcobucci\JWT\Signer\Hmac\Sha256;
  *
  * @property-read string $appName               应用的名称.
  * @property-read bool $debug
+ *
+ * ## 机器人相关.
+ *
+ * @property-read string $adapterName           adapter
  *
  * ## jwt 相关
  * @property-read string $jwtSigner             Jwt Signer 类名
@@ -61,6 +66,8 @@ class ChatlogSocketIOServiceProvider extends ServiceProvider
         return [
             'appName' => 'chatlog',
             'debug' => CommuneEnv::isDebug(),
+
+            'adapterName' => ChatlogInputAdapter::class,
 
             'protocals' => [
                 'SIGN' => Handlers\SignHandler::class,

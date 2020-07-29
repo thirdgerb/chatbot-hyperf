@@ -5,6 +5,7 @@ namespace Commune\Chatlog\SocketIO\Coms;
 
 
 use Commune\Blueprint\Framework\Auth\Supervise;
+use Commune\Chatlog\SocketIO\Coms\Room\EntryParser;
 use Commune\Support\Option\AbsOption;
 
 /**
@@ -20,7 +21,7 @@ use Commune\Support\Option\AbsOption;
  *
  * ## 机器人相关的逻辑
  * @property-read bool $bot         房间默认是否对机器人.
- * @property-read string $entry     房间与机器人通讯时的 context.
+ * @property-read string $botName   房间里机器人的昵称.
  *
  * ## 权限管理.
  * @property-read int $level        加入房间的默认身份级别.
@@ -35,6 +36,18 @@ use Commune\Support\Option\AbsOption;
  * @property-read bool $autoJoin    符合级别的用户是否自动加入房间.
  * @property-read bool $recommend   是否将房间主动推荐给用户 (未连接).
  *
+ *
+ * ## 可以用类来代表的属性.
+ *
+ * @property-read string $entryParser     房间与机器人通讯时生成 EntryParser
+ *
+ * 可以直接是 contextName, 也可以是一个 __invoke 类.
+ * @see EntryParser
+ *
+ * // onInput
+ * // onJoin
+ * // onOutput
+ * // onBroadcast
  *
  */
 class RoomOption extends AbsOption
@@ -56,8 +69,7 @@ class RoomOption extends AbsOption
             'closable' => true,
 
             'bot' => true,
-
-            'entry' => '',
+            'botName' => 'Commune',
 
             'level' => Supervise::GUEST,
             'levelMode' => self::LEVEL_MODE_ABOVE,
@@ -67,6 +79,8 @@ class RoomOption extends AbsOption
 
             'autoJoin' => false,
             'recommend' => false,
+
+            'entryParser' => '',
         ];
     }
 
@@ -75,5 +89,11 @@ class RoomOption extends AbsOption
         return [];
     }
 
+    public function getBotId(string $session) : string
+    {
+        $botName = $this->botName;
+        $scene = $this->scene;
+        return md5("bot:name:$botName:scene:$scene:session:$session");
+    }
 
 }

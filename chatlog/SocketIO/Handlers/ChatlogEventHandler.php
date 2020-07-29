@@ -5,6 +5,7 @@ namespace Commune\Chatlog\SocketIO\Handlers;
 
 
 use Commune\Blueprint\CommuneEnv;
+use Commune\Blueprint\Kernel\Handlers\ShellInputReqHandler;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsEventHandler;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\ProtocalException;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\SioRequest;
@@ -12,8 +13,12 @@ use Commune\Chatbot\Hyperf\Coms\SocketIO\SioResponse;
 use Commune\Chatlog\Database\ChatlogMessageRepo;
 use Commune\Chatlog\Database\ChatlogUserRepo;
 use Commune\Chatlog\ChatlogConfig;
+use Commune\Chatlog\SocketIO\Chatbot\ChatlogInputPacker;
+use Commune\Chatlog\SocketIO\Coms\ChatlogFactory;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Coms\RoomService;
+use Commune\Chatlog\SocketIO\DTO\InputInfo;
+use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
 use Commune\Chatlog\SocketIO\Messages\TextMessage;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
@@ -37,7 +42,8 @@ use Hyperf\SocketIOServer\Socket;
  * 考虑 Commune 内部服务的互通性, 将业务相关的依赖注入转移到 Commune 自己的容器里.
  *
  */
-abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGenerator
+abstract class ChatlogEventHandler extends AbsEventHandler
+    implements ChatlogFactory, HasIdGenerator
 {
     use IdGeneratorHelper;
 
@@ -239,6 +245,7 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
             ->make(ChatlogMessageRepo::class);
     }
 
+
     public function getUserRepo() : ChatlogUserRepo
     {
         return $this
@@ -264,14 +271,29 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
     /*----- 内部方法. -----*/
 
     public function deliverToChatbot(
-        MessageBatch $batch,
         ChatlogSioRequest $request,
+        UserInfo $user,
+        InputInfo $input,
         BaseNamespace $controller,
         Socket $socket
     ) : void
     {
+        $packer = new ChatlogInputPacker(
+            $this->shell,
+            $this->platform,
+            $request,
+            $user,
+            $input,
+            $this,
+            $controller,
+            $socket
+        );
 
-
+        $this->platform->onPacker(
+            $packer,
+            $this->getConfig()->adapterName,
+            ShellInputReqHandler::class
+        );
     }
 
 
@@ -311,4 +333,5 @@ abstract class ChatlogEventHandler extends AbsEventHandler implements HasIdGener
         ]);
         return $request->makeResponse($batch);
     }
+
 }

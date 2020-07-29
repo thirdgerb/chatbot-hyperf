@@ -4,13 +4,11 @@
 namespace Commune\Chatlog\SocketIO\Chatbot;
 
 
-
 use Commune\Blueprint\Platform\Adapter;
 use Commune\Blueprint\Platform\Packer;
 use Commune\Blueprint\Shell;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOPlatform;
-use Commune\Chatlog\Database\ChatlogMessageRepo;
-use Commune\Chatlog\SocketIO\Coms\RoomService;
+use Commune\Chatlog\SocketIO\Coms\ChatlogFactory;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\DTO\InputInfo;
@@ -18,7 +16,7 @@ use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
-class ChatlogSIOPacker implements Packer
+class ChatlogInputPacker implements Packer
 {
 
     /**
@@ -47,19 +45,9 @@ class ChatlogSIOPacker implements Packer
     public $request;
 
     /**
-     * @var ChatlogMessageRepo
-     */
-    public $messageRepo;
-
-    /**
      * @var BaseNamespace
      */
     public $emitter;
-
-    /**
-     * @var RoomService
-     */
-    public $roomService;
 
     /**
      * @var HfSocketIOPlatform
@@ -67,35 +55,29 @@ class ChatlogSIOPacker implements Packer
     public $platform;
 
     /**
-     * SIOPacker constructor.
-     * @param Shell $shell
-     * @param HfSocketIOPlatform $platform
-     * @param BaseNamespace $emitter
-     * @param Socket $socket
-     * @param ChatlogSioRequest $request
-     * @param ChatlogMessageRepo $messageRepo
-     * @param Input $input
-     * @param UserInfo $user
+     * @var ChatlogFactory
      */
+    public $factory;
+
     public function __construct(
         Shell $shell,
         HfSocketIOPlatform $platform,
-        BaseNamespace $emitter,
-        Socket $socket, 
-        ChatlogSioRequest $request, 
-        ChatlogMessageRepo $messageRepo,
-        Input $input,
-        UserInfo $user
+        ? ChatlogSioRequest $request,
+        ? UserInfo $user,
+        ? InputInfo $input,
+        ChatlogFactory $factory,
+        BaseNamespace $controller,
+        Socket $socket
     )
     {
         $this->platform = $platform;
         $this->input = $input;
         $this->user = $user;
         $this->shell = $shell;
+        $this->factory = $factory;
         $this->socket = $socket;
         $this->request = $request;
-        $this->messageRepo = $messageRepo;
-        $this->emitter = $emitter;
+        $this->emitter = $controller;
     }
 
 
@@ -122,18 +104,13 @@ class ChatlogSIOPacker implements Packer
     {
         unset(
             $this->platform,
+            $this->shell,
             $this->input,
             $this->user,
-            $this->shell,
             $this->socket,
             $this->request,
-            $this->messageRepo,
             $this->emitter
         );
-    }
-
-    public function getEntry() : string
-    {
     }
 
 

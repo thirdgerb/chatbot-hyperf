@@ -13,6 +13,7 @@ use Commune\Support\Message\AbsMessage;
  * @property-read string $scene
  * @property-read int $createdAt
  * @property-read bool $bot
+ * @property-read array $query
  * @property-read ChatlogMessage $message
  */
 class InputInfo extends AbsMessage
@@ -23,14 +24,17 @@ class InputInfo extends AbsMessage
             'session' => '',
             'scene' => '',
             'bot' => true,
-            'createdAt' => 0,
+            'createdAt' => time(),
+            'query' => [],
             'message' => [],
         ];
     }
 
-    public function __set_message(string $name, array $value) : void
+    public function __set_message(string $name, $value) : void
     {
-        $this->_data[$name] = ChatlogMessage::create($value);
+        $this->_data[$name] = $value instanceof ChatlogMessage
+            ? $value
+            :ChatlogMessage::create($value);
     }
 
     public static function relations(): array
