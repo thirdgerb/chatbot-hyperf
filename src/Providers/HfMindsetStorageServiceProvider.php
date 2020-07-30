@@ -19,8 +19,9 @@ class HfMindsetStorageServiceProvider extends MindsetStorageConfigProvider
     public static function stub(): array
     {
         return [
+            'mindsetCacheExpire' => 599,
             'resourcePath' => CommuneEnv::getResourcePath(),
-            'cacheExpire' => 600,
+            'useFileInitStorage' => true,
             'storage' => [
                 'wrapper' => HfDBStorageOption::class,
             ],
