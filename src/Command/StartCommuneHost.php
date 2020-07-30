@@ -22,7 +22,7 @@ use Symfony\Component\Console\Helper\Table;
 /**
  * 在 Hyperf 中启动 Commune Host.
  */
-class StartAppCommand extends Command
+class StartCommuneHost extends Command
 {
 
     /**
@@ -134,7 +134,7 @@ class StartAppCommand extends Command
          */
         $host = $container->get(Host::class);
 
-        $host->instance(StartAppCommand::class, $this);
+        $host->instance(StartCommuneHost::class, $this);
         $host->instance(InputInterface::class, $input);
         $host->instance(SymfonyStyle::class, $output);
         return $host;
@@ -150,9 +150,19 @@ class StartAppCommand extends Command
         $resetMind = $input->getOption('reset') ?? false;
         CommuneEnv::defineResetMind($resetMind);
 
-        CommuneEnv::defineBathPath(BASE_PATH . "/commune");
-        CommuneEnv::defineResourcePath(BASE_PATH . "/commune/resources");
-        CommuneEnv::defineLogPath(BASE_PATH . '/runtime/logs');
+        CommuneEnv::defineBathPath(env(
+            'COMMUNE_BATH_PATH',
+            BASE_PATH . "/commune"
+        ));
+
+        CommuneEnv::defineResourcePath(env(
+            'COMMUNE_RESOURCE_PATH',
+            BASE_PATH . "/commune/resources"
+        ));
+        CommuneEnv::defineLogPath(env(
+            'COMMUNE_LOG_PATH',
+            BASE_PATH . '/runtime/logs'
+        ));
 
         $debug = $input->getOption('debug') ?? false;
         CommuneEnv::defineDebug($debug);

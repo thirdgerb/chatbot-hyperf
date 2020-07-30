@@ -2,7 +2,7 @@
 
 namespace Commune\Chatbot\Hyperf;
 
-use Commune\Chatbot\Hyperf\Command\StartAppCommand;
+use Commune\Chatbot\Hyperf\Command\StartCommuneHost;
 
 class ConfigProvider
 {
@@ -18,7 +18,7 @@ class ConfigProvider
     {
         return [
             'commands' => [
-                StartAppCommand::class,
+                StartCommuneHost::class,
             ],
             'dependencies' => [
             ],

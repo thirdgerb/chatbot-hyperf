@@ -89,11 +89,5 @@ class RoomOption extends AbsOption
         return [];
     }
 
-    public function getBotId(string $session) : string
-    {
-        $botName = $this->botName;
-        $scene = $this->scene;
-        return md5("bot:name:$botName:scene:$scene:session:$session");
-    }
 
 }

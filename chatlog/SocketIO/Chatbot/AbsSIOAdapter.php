@@ -235,21 +235,23 @@ abstract class AbsSIOAdapter implements Adapter
         return [];
     }
 
+    /**
+     * 对消息数据进行处理.
+     * @param MessageBatch[] $batches
+     * @return MessageBatch[]
+     */
     public function parseBatches(array $batches) : array
     {
-
         $service = $this->packer->factory->getRoomService();
         $input = $this->packer->input;
         $room = $service->findRoom($input->scene);
-        $botId = $room->getBotId($input->session);
         $botName = $room->botName;
 
+        // 进行姓名处理.
         $batches = array_values(
             array_map(
-                function(MessageBatch $message) use ($botId, $botName){
-                    $creatorId = $message->creatorId;
-                    if (empty($creatorId)) {
-                        $message->creatorId = $botId;
+                function(MessageBatch $message) use ($botName){
+                    if (!empty($botName) && $message->mode === MessageBatch::MODE_BOT) {
                         $message->creatorName = $botName;
                     }
                     return $message;
