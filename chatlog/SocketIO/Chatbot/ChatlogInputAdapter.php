@@ -8,11 +8,14 @@ use Commune\Chatlog\SocketIO\Messages\EventMessage;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Message\Host\Convo\IEventMsg;
 use Commune\Message\Host\Convo\IText;
+use Commune\Message\Host\Convo\Verbal\JsonMsg;
 use Commune\Protocals\HostMsg;
 use Commune\Protocals\HostMsg\IntentMsg;
+use Commune\Protocals\Intercom\OutputMsg;
 use Commune\Protocals\IntercomMsg;
 use Commune\Chatlog\SocketIO\Messages\TextMessage;
 use Commune\Blueprint\Kernel\Protocals\ShellOutputResponse;
+use Commune\Support\Utils\MarkdownUtils;
 
 class ChatlogInputAdapter extends AbsSIOAdapter implements ChatlogMessageParser
 {
@@ -96,8 +99,7 @@ class ChatlogInputAdapter extends AbsSIOAdapter implements ChatlogMessageParser
             return MessageBatch::MODE_SYSTEM;
         }
 
-        $userId = $message->getCreatorId();
-        return empty($userId)
+        return $message instanceof OutputMsg
             ? MessageBatch::MODE_BOT
             : MessageBatch::MODE_USER;
     }
@@ -153,6 +155,15 @@ class ChatlogInputAdapter extends AbsSIOAdapter implements ChatlogMessageParser
     {
         $hostMsg = $message->getMessage();
         $id = $message->getMessageId();
+
+        if ($hostMsg instanceof JsonMsg) {
+            return [
+                new TextMessage([
+                    'id' => $id,
+                    'text' => MarkdownUtils::quote($hostMsg->getText()),
+                ])
+            ];
+        }
 
         if ($hostMsg instanceof HostMsg\Convo\QA\QuestionMsg) {
             return [
