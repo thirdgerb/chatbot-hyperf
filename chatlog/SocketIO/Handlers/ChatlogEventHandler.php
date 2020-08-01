@@ -10,13 +10,9 @@ use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsEventHandler;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\ProtocalException;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\SioRequest;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\SioResponse;
-use Commune\Chatlog\Database\ChatlogMessageRepo;
-use Commune\Chatlog\Database\ChatlogUserRepo;
-use Commune\Chatlog\ChatlogConfig;
 use Commune\Chatlog\SocketIO\Chatbot\ChatlogInputPacker;
 use Commune\Chatlog\SocketIO\Coms\ChatlogFactory;
-use Commune\Chatlog\SocketIO\Coms\JwtFactory;
-use Commune\Chatlog\SocketIO\Coms\RoomService;
+use Commune\Chatlog\SocketIO\Coms\ChatlogFactoryTrait;
 use Commune\Chatlog\SocketIO\DTO\InputInfo;
 use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
@@ -45,12 +41,7 @@ use Hyperf\SocketIOServer\Socket;
 abstract class ChatlogEventHandler extends AbsEventHandler
     implements ChatlogFactory, HasIdGenerator
 {
-    use IdGeneratorHelper;
-
-    /**
-     * @var ChatlogConfig|null
-     */
-    protected $config;
+    use IdGeneratorHelper, ChatlogFactoryTrait;
 
     /**
      * @param ChatlogSioRequest $request
@@ -231,42 +222,6 @@ abstract class ChatlogEventHandler extends AbsEventHandler
     }
 
     /*----- 工具类 -----*/
-
-    public function getConfig() : ChatlogConfig
-    {
-        return $this->config
-            ?? $this->config = $this->container->make(ChatlogConfig::class);
-    }
-
-    public function getMessageRepo() : ChatlogMessageRepo
-    {
-        return $this
-            ->container
-            ->make(ChatlogMessageRepo::class);
-    }
-
-
-    public function getUserRepo() : ChatlogUserRepo
-    {
-        return $this
-            ->container
-            ->make(ChatlogUserRepo::class);
-    }
-
-    public function getJwtFactory() : JwtFactory
-    {
-        return $this
-            ->container
-            ->make(JwtFactory::class);
-    }
-
-
-    public function getRoomService() : RoomService
-    {
-        return $this
-            ->container
-            ->make(RoomService::class);
-    }
 
     /*----- 内部方法. -----*/
 

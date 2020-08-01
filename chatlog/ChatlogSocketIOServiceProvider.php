@@ -9,6 +9,8 @@ use Commune\Blueprint\Exceptions\CommuneLogicException;
 use Commune\Chatlog\Database\ChatlogMessageRepo;
 use Commune\Chatlog\Database\ChatlogUserRepo;
 use Commune\Chatlog\SocketIO\Chatbot\ChatlogInputAdapter;
+use Commune\Chatlog\SocketIO\Coms\ChatlogFactory;
+use Commune\Chatlog\SocketIO\Coms\IChatlogFactory;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
 use Commune\Chatlog\SocketIO\Coms\RoomOption;
 use Commune\Chatlog\SocketIO\Coms\RoomService;
@@ -132,6 +134,7 @@ class ChatlogSocketIOServiceProvider extends ServiceProvider
         $app->singleton(ChatlogUserRepo::class);
         $app->singleton(ChatlogMessageRepo::class);
         $app->singleton(RoomService::class);
+        $app->singleton(ChatlogFactory::class, IChatlogFactory::class);
     }
 
     /**

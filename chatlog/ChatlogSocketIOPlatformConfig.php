@@ -8,6 +8,7 @@ use Commune\Chatbot\Hyperf\Platforms\HfSocketIOPlatformConfig;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOOption;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOPlatform;
 use Commune\Chatlog\SocketIO\ChatlogSocketIOController;
+use Commune\Chatlog\SocketIO\Process\AsyncMessageProcess;
 use Commune\Framework\Providers\LoggerByMonologProvider;
 
 /**
@@ -46,7 +47,7 @@ class ChatlogSocketIOPlatformConfig extends HfSocketIOPlatformConfig
                         ],
                     ],
                     'processes' => [
-                        // AsyncMessageProcess::class,
+                         AsyncMessageProcess::class,
                     ],
                     'settings' => [],
                     'controller' => ChatlogSocketIOController::class,
