@@ -14,6 +14,7 @@ use Commune\Support\Uuid\IdGeneratorHelper;
  * 消息批次.
  *
  * @property int $mode
+ * @property string $scene
  * @property string $session
  * @property string $batchId
  * @property string $creatorId
@@ -35,6 +36,7 @@ class MessageBatch extends ChatlogResProtocal implements HasIdGenerator
     {
         return [
             'mode' => self::MODE_BOT,
+            'scene' => '',
             'session' => '',
             'batchId' => '',
             'creatorId' => '',
@@ -63,6 +65,7 @@ class MessageBatch extends ChatlogResProtocal implements HasIdGenerator
     {
         return new static([
             'mode' => self::MODE_USER,
+            'scene' => $input->scene,
             'session' => $input->session,
             'batchId' => $input->message->id,
             'creatorId' => $user->id,
@@ -106,10 +109,23 @@ class MessageBatch extends ChatlogResProtocal implements HasIdGenerator
         return 'MESSAGE_BATCH';
     }
 
+    protected $_savable;
+
     public function shouldSave() : bool
     {
-        return $this->mode !== self::MODE_SYSTEM
-            && !empty($this->_data['messages']);
+        if (isset($this->_savable)) {
+            return $this->_savable;
+        }
+
+        if ($this->mode === self::MODE_SYSTEM) {
+            return $this->_savable = false;
+        }
+
+        $savables = array_filter($this->messages, function(ChatlogMessage $message) {
+            return $message->shouldSave();
+        });
+
+        return $this->_savable = count($savables) > 0;
     }
 
     public function toSavableData() : array
@@ -121,11 +137,12 @@ class MessageBatch extends ChatlogResProtocal implements HasIdGenerator
 
         $messages = [];
         foreach ($this->messages as $key => $message) {
-            if ($message->isSavable()) {
+            if ($message->shouldSave()) {
                 $messages[$key] = $message;
             }
         }
 
+        $data['context'] = [];
         $data['messages'] = $messages;
         return $data;
     }

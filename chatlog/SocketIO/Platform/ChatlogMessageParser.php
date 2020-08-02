@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Commune\Chatlog\SocketIO\Chatbot;
+namespace Commune\Chatlog\SocketIO\Platform;
 
 
 use Commune\Blueprint\Kernel\Protocals\ShellOutputResponse;
@@ -20,9 +20,9 @@ interface ChatlogMessageParser
 {
 
     /**
-     * @return ChatlogInputPacker
+     * @return ChatlogWebPacker
      */
-    public function getPacker() : ChatlogInputPacker;
+    public function getPacker() : ChatlogWebPacker;
 
     /*----------- 输入检查 ------------*/
 

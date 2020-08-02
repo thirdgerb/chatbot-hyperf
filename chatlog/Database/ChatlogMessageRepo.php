@@ -38,6 +38,7 @@ class ChatlogMessageRepo
     {
         $table->increments('id');
         $table->string('batch_id');
+        $table->string('scene');
         $table->string('session');
         $table->string('shell');
         $table->text('data');
@@ -67,6 +68,7 @@ class ChatlogMessageRepo
             return [
                 'batch_id' => $batch->batchId,
                 'session' => $batch->session,
+                'scene' => $batch->scene,
                 'shell' => $shell,
                 'data' => Babel::serialize($batch),
                 'created_at' => Carbon::createFromTimestamp($batch->createdAt),

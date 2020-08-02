@@ -31,4 +31,9 @@ class EventMessage extends ChatlogMessage
         ];
     }
 
+    public function shouldSave(): bool
+    {
+        return false;
+    }
+
 }

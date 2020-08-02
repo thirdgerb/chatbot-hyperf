@@ -8,7 +8,7 @@ use Commune\Blueprint\CommuneEnv;
 use Commune\Blueprint\Exceptions\CommuneLogicException;
 use Commune\Chatlog\Database\ChatlogMessageRepo;
 use Commune\Chatlog\Database\ChatlogUserRepo;
-use Commune\Chatlog\SocketIO\Chatbot\ChatlogInputAdapter;
+use Commune\Chatlog\SocketIO\Platform\ChatlogWebAdapter;
 use Commune\Chatlog\SocketIO\Coms\ChatlogFactory;
 use Commune\Chatlog\SocketIO\Coms\IChatlogFactory;
 use Commune\Chatlog\SocketIO\Coms\JwtFactory;
@@ -69,7 +69,7 @@ class ChatlogSocketIOServiceProvider extends ServiceProvider
             'appName' => 'chatlog',
             'debug' => CommuneEnv::isDebug(),
 
-            'adapterName' => ChatlogInputAdapter::class,
+            'adapterName' => ChatlogWebAdapter::class,
 
             'protocals' => [
                 'SIGN' => Handlers\SignHandler::class,

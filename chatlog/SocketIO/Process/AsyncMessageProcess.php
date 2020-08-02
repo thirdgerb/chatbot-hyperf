@@ -9,11 +9,14 @@ use Commune\Blueprint\Kernel\Protocals\ShellOutputRequest;
 use Commune\Blueprint\Platform;
 use Commune\Blueprint\Shell;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOPlatform;
-use Commune\Chatlog\SocketIO\Chatbot\ChatlogInputPacker;
+use Commune\Chatlog\SocketIO\Coms\EmitterAdapter;
+use Commune\Chatlog\SocketIO\Handlers\ChatlogEventHandler;
+use Commune\Chatlog\SocketIO\Platform\ChatlogWebAdapter;
+use Commune\Chatlog\SocketIO\Platform\ChatlogWebPacker;
 use Commune\Chatlog\SocketIO\Coms\ChatlogFactory;
+use Commune\Chatlog\SocketIO\Protocal\ChatlogSioResponse;
 use Commune\Contracts\Log\ExceptionReporter;
 use Commune\Contracts\Messenger\Broadcaster;
-use Commune\Contracts\Messenger\ShellMessenger;
 use Hyperf\Process\AbstractProcess;
 use Hyperf\SocketIOServer\SocketIO;
 use Hyperf\Utils\ApplicationContext;
@@ -84,24 +87,19 @@ class AsyncMessageProcess extends AbstractProcess
         $this->init($host);
         $this->io = $this->getIO($container);
 
+        /**
+         * @var Broadcaster $broadcaster
+         */
+        $broadcaster = $this
+            ->host
+            ->getProcContainer()
+            ->make(Broadcaster::class);
 
-        \Swoole\Coroutine\run(function() {
-            /**
-             * @var Broadcaster $broadcaster
-             */
-            $broadcaster = $this
-                ->host
-                ->getProcContainer()
-                ->make(Broadcaster::class);
-
-            $broadcaster->subscribe(
-                [$this, 'receiveAsyncRequest'],
-                $this->shell->getId(),
-                null // shell 的全部都监听.
-            );
-        });
-
-
+        $broadcaster->subscribe(
+            [$this, 'receiveAsyncRequest'],
+            $this->shell->getId(),
+            null // shell 的全部都监听.
+        );
     }
 
     protected function init(Host $host)
@@ -118,18 +116,32 @@ class AsyncMessageProcess extends AbstractProcess
 
     public function receiveAsyncRequest(string $chan, ShellOutputRequest $request) : void
     {
-        $packer = new ChatlogInputPacker(
-            $this->shell,
-            $this->platform,
-            null,
-            null,
-            null,
-            $this->factory,
-            $this->io,
-            null
+
+        $packer = new ChatlogWebPacker(
+            new EmitterAdapter($this->io),
+            $request->getTraceId()
         );
 
+        $adapter = $packer->adapt(ChatlogWebAdapter::class, $this->shell->getId());
 
+        $success = $this->platform->onAdapter(
+            $packer,
+            $adapter,
+            ShellOutputReqHandler::class,
+            $request
+        );
+
+        if (!$success) {
+            return;
+        }
+
+        ChatlogEventHandler::finishPacker(
+            $this->factory->getMessageRepo(),
+            $this->shell->getId(),
+            $this->factory->getRoomService(),
+            $packer,
+            $this->platform->getLogger()
+        );
     }
 
     protected function getIO(ContainerInterface $container) :  SocketIO

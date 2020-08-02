@@ -4,6 +4,7 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
+use Commune\Chatlog\SocketIO\Coms\EmitterAdapter;
 use Commune\Chatlog\SocketIO\DTO\InputInfo;
 use Commune\Chatlog\SocketIO\Middleware\AuthorizePipe;
 use Commune\Chatlog\SocketIO\Middleware\RequestGuardPipe;
@@ -12,7 +13,6 @@ use Commune\Chatlog\SocketIO\Middleware\TokenAnalysePipe;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Commune\Chatlog\SocketIO\DTO\UserInfo;
-use Commune\Chatlog\SocketIO\Protocal\UserChats;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
@@ -35,50 +35,43 @@ class InputHandler extends ChatlogEventHandler
         $input = InputInfo::create($request->proto);
 
         $scene = $input->scene;
+        $roomService = $this->getRoomService();
+        $room = $roomService->findRoom($scene);
 
         // 准备要发送的消息.
-        $inputBatch = MessageBatch::fromInput($input, $user);
+        $inputBatch = $savingBatch = MessageBatch::fromInput($input, $user);
+        $emitter = new EmitterAdapter($socket);
 
-        // 广播消息给群里其他人.
-        $response = $request->makeResponse($inputBatch);
-        $socket->to($input->session)->emit($response->event, $response->toEmit());
+        // 按房间的规则, 检查输入消息是否投递给指定对象, 通知其他人等等.
+        $onInput = $roomService->onInput($room);
+        if (isset($onInput)) {
+            $inputBatch = $onInput(
+                $request,
+                $inputBatch,
+                $user,
+                $emitter
+            );
+        }
+
+        // onInput 环节可以通过返回 null, 终止后续操作.
+        if (empty($inputBatch)) {
+            return [];
+        }
 
         // 保存消息.
         $this->getMessageRepo()->saveBatch(
             $this->shell->getId(),
-            $inputBatch
+            $savingBatch
         );
-
-        $roomService = $this->getRoomService();
-
-        // 如果是监控中的场景, 通知管理员.
-        // 这个环节是 information, 可以独立成模块.
-        if (
-            $roomService->isRoomSupervised($scene)
-            && !$roomService->isSupervisor($user)
-        ) {
-            $chatInfo = $roomService->createChatInfo(
-                $roomService->findRoom($scene),
-                $user,
-                true
-            );
-
-            $protocal = new UserChats(['chats' => [$chatInfo]]);
-            $response = $request->makeResponse($protocal);
-            $controller
-                ->to($roomService->getSupervisorSession())
-                ->emit($response->event, $response->toEmit());
-        }
-
 
         // 如果发送给机器人.
         if ($input->bot) {
             $this->deliverToChatbot(
                 $request,
+                $room,
                 $user,
-                $input,
-                $controller,
-                $socket
+                $inputBatch,
+                new EmitterAdapter($controller)
             );
         }
 

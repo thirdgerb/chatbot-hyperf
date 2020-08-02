@@ -59,7 +59,7 @@ class ChatlogMessage extends AbsMessage implements HasIdGenerator
         return false;
     }
 
-    public function isSavable() : bool
+    public function shouldSave() : bool
     {
         return true;
     }

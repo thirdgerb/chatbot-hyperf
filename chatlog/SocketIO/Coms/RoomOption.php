@@ -5,7 +5,9 @@ namespace Commune\Chatlog\SocketIO\Coms;
 
 
 use Commune\Blueprint\Framework\Auth\Supervise;
-use Commune\Chatlog\SocketIO\Coms\Room\EntryParser;
+use Commune\Chatlog\SocketIO\Coms\Room\DefaultOnInput;
+use Commune\Chatlog\SocketIO\Coms\Room\DefaultOnOutput;
+use Commune\Chatlog\SocketIO\Coms\Room\DefaultOnPacker;
 use Commune\Support\Option\AbsOption;
 
 /**
@@ -29,6 +31,7 @@ use Commune\Support\Option\AbsOption;
  * @property-read bool $private     房间如果是私人的, 则只允许管理员和用户自己加入.
  *
  *
+ *
  * ## 消息相关.
  * @property-read bool $supervised  表示需要通知给管理员的房间. 任何输入消息都会告知管理员房间的存在.
  *
@@ -36,19 +39,13 @@ use Commune\Support\Option\AbsOption;
  * @property-read bool $autoJoin    符合级别的用户是否自动加入房间.
  * @property-read bool $recommend   是否将房间主动推荐给用户 (未连接).
  *
+ * @property-read string $entry
  *
- * ## 可以用类来代表的属性.
+ * ## 房间的转化模块
  *
- * @property-read string $entryParser     房间与机器人通讯时生成 EntryParser
- *
- * 可以直接是 contextName, 也可以是一个 __invoke 类.
- * @see EntryParser
- *
- * // onInput
- * // onJoin
- * // onOutput
- * // onBroadcast
- *
+ * @property-read string $onInput
+ * @property-read string $onPacker
+ * @property-read string $onOutput
  */
 class RoomOption extends AbsOption
 {
@@ -61,6 +58,7 @@ class RoomOption extends AbsOption
     public static function stub(): array
     {
         return [
+            // 房间的基本信息
             'scene' => '',
             'title' => '',
             'desc' => '',
@@ -68,19 +66,26 @@ class RoomOption extends AbsOption
             'category' => '',
             'closable' => true,
 
+            // 机器人相关信息
             'bot' => true,
             'botName' => 'Commune',
 
+            // 权限基本信息.
             'level' => Supervise::GUEST,
             'levelMode' => self::LEVEL_MODE_ABOVE,
             'private' => false,
 
+            // 房间的基础信息
             'supervised' => false,
-
             'autoJoin' => false,
             'recommend' => false,
 
-            'entryParser' => '',
+            // 房间的自定义组件.
+            'onInput' => DefaultOnInput::class,
+            'onPacker' => DefaultOnPacker::class,
+            'onOutput' => DefaultOnOutput::class,
+//            'onDirective' => '',
+//            'onIntent' => '',
         ];
     }
 

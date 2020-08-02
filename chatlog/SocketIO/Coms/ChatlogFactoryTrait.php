@@ -49,10 +49,12 @@ trait ChatlogFactoryTrait
             ->make(JwtFactory::class);
     }
 
+    protected $_roomService;
 
     public function getRoomService() : RoomService
     {
-        return $this
+        return $this->_roomService
+            ?? $this->_roomService = $this
             ->container
             ->make(RoomService::class);
     }

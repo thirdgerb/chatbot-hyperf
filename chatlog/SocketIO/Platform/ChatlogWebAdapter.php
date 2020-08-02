@@ -1,9 +1,10 @@
 <?php
 
 
-namespace Commune\Chatlog\SocketIO\Chatbot;
+namespace Commune\Chatlog\SocketIO\Platform;
 
 
+use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
 use Commune\Chatlog\SocketIO\Messages\EventMessage;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Message\Host\Convo\IEventMsg;
@@ -14,35 +15,13 @@ use Commune\Protocals\HostMsg\IntentMsg;
 use Commune\Protocals\Intercom\OutputMsg;
 use Commune\Protocals\IntercomMsg;
 use Commune\Chatlog\SocketIO\Messages\TextMessage;
-use Commune\Blueprint\Kernel\Protocals\ShellOutputResponse;
 use Commune\Support\Utils\MarkdownUtils;
 
-class ChatlogInputAdapter extends AbsSIOAdapter implements ChatlogMessageParser
+class ChatlogWebAdapter extends AbsSIOAdapter
 {
-    public function getParser(): ChatlogMessageParser
-    {
-        return $this;
-    }
 
-    public function getPacker(): ChatlogInputPacker
+    public function parseHostMsg(ChatlogMessage $message): ? HostMsg
     {
-        return $this->packer;
-    }
-
-    public function validatePacker(): ? string
-    {
-        return null;
-    }
-
-    public function hasRequest(): bool
-    {
-        return isset($this->packer->request);
-    }
-
-    public function parseHostMsg(): HostMsg
-    {
-        $message = $this->packer->input->message;
-
         if ($message instanceof TextMessage) {
             return IText::instance($message->text);
         }
@@ -51,36 +30,6 @@ class ChatlogInputAdapter extends AbsSIOAdapter implements ChatlogMessageParser
             return IEventMsg::instance($message->name, $message->payload);
         }
 
-
-        // 无法理解消息, 就发送一个通用事件去好了.
-        $name = HostMsg\Convo\EventMsg::EVENT_CLIENT_ACKNOWLEDGE;
-        return IEventMsg::instance($name);
-    }
-
-
-    public function parseEnv(): array
-    {
-        return [];
-    }
-
-    public function parseEntry() : string
-    {
-        $packer = $this->getPacker();
-        $roomService = $packer->factory->getRoomService();
-
-        return $roomService->parseEntry(
-            $packer->input,
-            $packer->user
-        );
-    }
-
-    public function acknowledgeIntent(
-        IntentMsg $intent,
-        ShellOutputResponse $response
-    ): ? callable
-    {
-        // 目前还没想到有哪些需要特别处理的 intent.
-        // 未来肯定会有. 比如将谁踢出房间之类的.
         return null;
     }
 

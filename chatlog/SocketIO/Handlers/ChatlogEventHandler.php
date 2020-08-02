@@ -10,7 +10,11 @@ use Commune\Chatbot\Hyperf\Coms\SocketIO\AbsEventHandler;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\ProtocalException;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\SioRequest;
 use Commune\Chatbot\Hyperf\Coms\SocketIO\SioResponse;
-use Commune\Chatlog\SocketIO\Chatbot\ChatlogInputPacker;
+use Commune\Chatlog\Database\ChatlogMessageRepo;
+use Commune\Chatlog\SocketIO\Coms\EmitterAdapter;
+use Commune\Chatlog\SocketIO\Coms\RoomOption;
+use Commune\Chatlog\SocketIO\Coms\RoomService;
+use Commune\Chatlog\SocketIO\Platform\ChatlogWebPacker;
 use Commune\Chatlog\SocketIO\Coms\ChatlogFactory;
 use Commune\Chatlog\SocketIO\Coms\ChatlogFactoryTrait;
 use Commune\Chatlog\SocketIO\DTO\InputInfo;
@@ -18,6 +22,7 @@ use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
 use Commune\Chatlog\SocketIO\Messages\TextMessage;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
+use Commune\Chatlog\SocketIO\Protocal\ChatlogSioResponse;
 use Commune\Chatlog\SocketIO\Protocal\ErrorInfo;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Chatlog\SocketIO\Protocal\QuitChat;
@@ -27,6 +32,7 @@ use Commune\Support\Uuid\HasIdGenerator;
 use Commune\Support\Uuid\IdGeneratorHelper;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
+use Psr\Log\LoggerInterface;
 
 
 /**
@@ -221,34 +227,112 @@ abstract class ChatlogEventHandler extends AbsEventHandler
         return [];
     }
 
-    /*----- 工具类 -----*/
+    public static function broadcastBatch(
+        string $trace,
+        MessageBatch $batch,
+        EmitterAdapter $emitter
+    ) : array
+    {
+        $response = new ChatlogSioResponse([
+            'event' => $batch->getEvent(),
+            'trace' => $trace,
+            'proto' => $batch,
+        ]);
+        // 广播消息给群里其他人.
+        $emitter->to($batch->session)->emit($response->event, $response->toEmit());
+        return [];
+    }
 
     /*----- 内部方法. -----*/
 
     public function deliverToChatbot(
         ChatlogSioRequest $request,
+        RoomOption $room,
         UserInfo $user,
-        InputInfo $input,
-        BaseNamespace $controller,
-        Socket $socket
+        MessageBatch $batch,
+        EmitterAdapter $emitter
     ) : void
     {
-        $packer = new ChatlogInputPacker(
-            $this->shell,
-            $this->platform,
-            $request,
+        $packer = new ChatlogWebPacker(
+            $emitter,
+            $request->trace,
             $user,
-            $input,
-            $this,
-            $controller,
-            $socket
+            $batch
         );
 
-        $this->platform->onPacker(
+        $service = $this->getRoomService();
+        $onPacker = $service->onPacker($room);
+        if (isset($onPacker)) {
+            $packer = $onPacker($room, $packer);
+        }
+
+        if (empty($packer)) {
+            return;
+        }
+
+        $success = $this->platform->onPacker(
             $packer,
             $this->getConfig()->adapterName,
             ShellInputReqHandler::class
         );
+
+        if (!$success) {
+            return;
+        }
+
+        static::finishPacker(
+            $this->getMessageRepo(),
+            $this->shell->getId(),
+            $service,
+            $packer,
+            $this->logger
+        );
+    }
+
+    public static function finishPacker(
+        ChatlogMessageRepo $repo,
+        string $shellId,
+        RoomService $service,
+        ChatlogWebPacker $packer,
+        LoggerInterface $logger
+    ) : void
+    {
+        $batches = $packer->outputBatches;
+        if (!empty($batches)) {
+
+            $saving = [];
+            foreach ($batches as $batch) {
+                $room = $service->findRoom($batch->scene);
+                if (empty($room)) {
+                    $logger->error(
+                        __METHOD__
+                        . ' message room not found, batch info '
+                        . $batch->toJson(JSON_UNESCAPED_UNICODE)
+                    );
+                    continue;
+                }
+
+                $onOutput = $service->onOutput($room);
+                $info = $onOutput(
+                    $room,
+                    $packer,
+                    $batch
+                );
+
+                if ($info) {
+                    array_push($saving, $info);
+                }
+            }
+
+
+            $repo->saveBatch(
+                $shellId,
+                ...$saving
+            );
+        }
+
+        $packer->destroy();
+        return;
     }
 
 

@@ -6,8 +6,15 @@ namespace Commune\Chatlog\SocketIO\Coms;
 
 use Commune\Blueprint\Framework\Auth\Supervise;
 use Commune\Blueprint\Framework\ProcContainer;
+use Commune\Blueprint\Platform\Packer;
 use Commune\Chatlog\ChatlogConfig;
 use Commune\Chatlog\SocketIO\Coms\Room\EntryParser;
+use Commune\Chatlog\SocketIO\Coms\Room\InputParser;
+use Commune\Chatlog\SocketIO\Coms\Room\OnDirective;
+use Commune\Chatlog\SocketIO\Coms\Room\OnInput;
+use Commune\Chatlog\SocketIO\Coms\Room\OnIntent;
+use Commune\Chatlog\SocketIO\Coms\Room\OnOutput;
+use Commune\Chatlog\SocketIO\Coms\Room\OnPacker;
 use Commune\Chatlog\SocketIO\DTO\ChatInfo;
 use Commune\Chatlog\SocketIO\DTO\InputInfo;
 use Commune\Chatlog\SocketIO\DTO\UserInfo;
@@ -315,36 +322,39 @@ class RoomService
 
     /*--------- parser ----------*/
 
-    /**
-     * @param InputInfo $input
-     * @param UserInfo $user
-     * @return string
-     */
-    public function parseEntry(InputInfo $input, UserInfo $user) : string
+    public function onPacker(RoomOption $room) : OnPacker
     {
-        $scene = $input->scene;
-        $room = $this->findRoom($scene);
-
-        if (empty($room)) {
-            return '';
-        }
-        $entry = $room->entryParser;
-
-        // 认为是一个 callable 对象.
-        if (is_a($entry, EntryParser::class, TRUE)) {
-            /**
-             * @var EntryParser $caller
-             */
-            $caller = $this->container->make($entry);
-            return $caller($room, $input, $user);
-        }
-
-        // 默认作为字符串来返回.
-        return $entry;
+        $onPacker = $room->onPacker;
+        return $this->container->make($onPacker);
     }
 
-    public function getRoomBotId(RoomOption $room) : string
+    public function onInput(RoomOption $room) : OnInput
     {
-
+        $onInput = $room->onInput;
+        return $this->container->make($onInput);
     }
+
+    public function onOutput(RoomOption $room) : OnOutput
+    {
+        return $this->container->make($room->onOutput);
+    }
+
+//    public function onDirective(RoomOption $room) : ? OnDirective
+//    {
+//        $onDirective = $room->onDirective;
+//        return empty($onDirective)
+//            ? null
+//            : $this->container->make($onDirective);
+//    }
+//
+//    public function onIntent(RoomOption $room) : ? OnIntent
+//    {
+//        $onIntent = $room->onIntent;
+//
+//        return empty($onIntent)
+//            ? null
+//            : $this->container->make($onIntent);
+//    }
+
+
 }

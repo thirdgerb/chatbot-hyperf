@@ -4,6 +4,7 @@
 namespace Commune\Chatlog\SocketIO\Handlers;
 
 
+use Commune\Chatlog\SocketIO\Coms\EmitterAdapter;
 use Commune\Chatlog\SocketIO\DTO\InputInfo;
 use Commune\Chatlog\SocketIO\Messages\EventMessage;
 use Commune\Chatlog\SocketIO\Messages\TextMessage;
@@ -15,6 +16,7 @@ use Commune\Chatlog\SocketIO\DTO\RoomInfo;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;
 use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Commune\Chatlog\SocketIO\Protocal\JoinedRoom;
+use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Protocals\HostMsg\Convo\EventMsg;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
@@ -58,6 +60,7 @@ class JoinHandler extends ChatlogEventHandler
 
         // 发送消息给服务端.
         $roomOption = $this->getRoomService()->findRoom($room->scene);
+
         if ($roomOption->bot) {
             $event = EventMessage::instance(EventMsg::EVENT_CLIENT_CONNECTION);
             $newInput = new InputInfo([
@@ -67,12 +70,14 @@ class JoinHandler extends ChatlogEventHandler
                 'message' => $event,
             ]);
 
+            $joinBatch = MessageBatch::fromInput($newInput, $user);
+
             $this->deliverToChatbot(
                 $request,
+                $roomOption,
                 $user,
-                $newInput,
-                $controller,
-                $socket
+                $joinBatch,
+                new EmitterAdapter($controller)
             );
         }
 
