@@ -109,7 +109,6 @@ abstract class AbsSIOAdapter implements Adapter
             $batch->batchId,
             $batch->scene
         );
-
         $this->shellRequest = IShellInputRequest::instance(
             false,
             $input,
@@ -174,12 +173,14 @@ abstract class AbsSIOAdapter implements Adapter
                 || $lastMode === MessageBatch::MODE_SYSTEM // 上一条已经是系统消息了.
                 || $output->getCreatorId() !== $creatorId // 不是同一个 creator
             ) {
+
+                $creatorId = $output->getCreatorId();
                 $batch = new MessageBatch([
                     'mode' => $mode,
                     'scene' => $output->getScene(),
                     'session' => $response->getSessionId(),
                     'batchId' => $output->getMessageId(), // 用第一条消息的 id 作为batchId
-                    'creatorId' => $output->getCreatorId(),
+                    'creatorId' => $creatorId,
                     'creatorName' => $output->getCreatorName(),
                     'createdAt' => $output->getDeliverAt(),
                 ]);

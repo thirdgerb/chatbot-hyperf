@@ -7,6 +7,7 @@ namespace Commune\Chatlog\SocketIO\Messages;
  * @property-read string $id
  * @property-read string $type
  * @property-read string $text
+ * @property-read bool $md
  */
 class TextMessage extends ChatlogMessage
 {
@@ -22,6 +23,7 @@ class TextMessage extends ChatlogMessage
             'id' => '',
             'type' => ChatlogMessage::MESSAGE_TEXT,
             'text' => '',
+            'md' => false,
         ];
     }
 

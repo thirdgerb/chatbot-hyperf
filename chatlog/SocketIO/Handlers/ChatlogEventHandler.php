@@ -324,7 +324,6 @@ abstract class ChatlogEventHandler extends AbsEventHandler
                 }
             }
 
-
             $repo->saveBatch(
                 $shellId,
                 ...$saving

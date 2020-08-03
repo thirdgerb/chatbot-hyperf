@@ -14,7 +14,6 @@ use Commune\Chatlog\SocketIO\Handlers\ChatlogEventHandler;
 use Commune\Chatlog\SocketIO\Platform\ChatlogWebAdapter;
 use Commune\Chatlog\SocketIO\Platform\ChatlogWebPacker;
 use Commune\Chatlog\SocketIO\Coms\ChatlogFactory;
-use Commune\Chatlog\SocketIO\Protocal\ChatlogSioResponse;
 use Commune\Contracts\Log\ExceptionReporter;
 use Commune\Contracts\Messenger\Broadcaster;
 use Hyperf\Process\AbstractProcess;
@@ -22,7 +21,6 @@ use Hyperf\SocketIOServer\SocketIO;
 use Hyperf\Utils\ApplicationContext;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Swoole\Coroutine;
 
 /**
  * 异步广播消息.
@@ -86,7 +84,6 @@ class AsyncMessageProcess extends AbstractProcess
         $host = $container->get(Host::class);
         $this->init($host);
         $this->io = $this->getIO($container);
-
         /**
          * @var Broadcaster $broadcaster
          */
@@ -116,7 +113,6 @@ class AsyncMessageProcess extends AbstractProcess
 
     public function receiveAsyncRequest(string $chan, ShellOutputRequest $request) : void
     {
-
         $packer = new ChatlogWebPacker(
             new EmitterAdapter($this->io),
             $request->getTraceId()

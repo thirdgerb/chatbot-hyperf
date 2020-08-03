@@ -14,26 +14,6 @@ use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 class DefaultOnOutput implements OnOutput
 {
 
-    /**
-     * @var ChatlogMessageRepo
-     */
-    protected $repo;
-
-    /**
-     * @var Shell
-     */
-    protected $shell;
-
-    /**
-     * DefaultOnOutput constructor.
-     * @param ChatlogMessageRepo $repo
-     */
-    public function __construct(ChatlogMessageRepo $repo)
-    {
-        $this->repo = $repo;
-    }
-
-
     public function __invoke(
         RoomOption $room,
         ChatlogWebPacker $packer,

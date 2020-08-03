@@ -71,7 +71,7 @@ class ChatlogMessageRepo
                 'scene' => $batch->scene,
                 'shell' => $shell,
                 'data' => Babel::serialize($batch),
-                'created_at' => Carbon::createFromTimestamp($batch->createdAt),
+                'created_at' => new Carbon(), // 都用收到消息的时间为准.
             ];
         }, $messages);
 
@@ -159,7 +159,7 @@ class ChatlogMessageRepo
             ->where('session', '=', $session)
             ->limit($limit)
             ->orderBy('id', 'desc')
-            ->get(['data']);
+            ->get(['id', 'data']);
 
         return $this->unpackCollection($collection);
     }
@@ -200,12 +200,13 @@ class ChatlogMessageRepo
     protected function unpackCollection(Collection $collection) : array
     {
         return $collection
+            ->sort(function($a, $b) {
+                return $a->id - $b->id;
+            })
             ->map(function($obj) {
                 return Babel::unserialize($obj->data);
             })->filter(function($obj) {
                 return $obj instanceof MessageBatch;
-            })->sort(function(MessageBatch $a, MessageBatch $b) {
-                return $a->createdAt - $b->createdAt;
             })->all();
     }
 

@@ -10,6 +10,7 @@ use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Message\Host\Convo\IEventMsg;
 use Commune\Message\Host\Convo\IText;
 use Commune\Message\Host\Convo\Verbal\JsonMsg;
+use Commune\Message\Host\Convo\Verbal\MarkdownMsg;
 use Commune\Protocals\HostMsg;
 use Commune\Protocals\HostMsg\IntentMsg;
 use Commune\Protocals\Intercom\OutputMsg;
@@ -110,6 +111,17 @@ class ChatlogWebAdapter extends AbsSIOAdapter
                 new TextMessage([
                     'id' => $id,
                     'text' => MarkdownUtils::quote($hostMsg->getText()),
+                    'md' => true,
+                ])
+            ];
+        }
+
+        if ($hostMsg instanceof MarkdownMsg) {
+            return [
+                new TextMessage([
+                    'id' => $id,
+                    'text' => $hostMsg->getText(),
+                    'md' => true,
                 ])
             ];
         }
