@@ -43,9 +43,9 @@ class HfPlatformOption extends AbsOption
                 'buffer_output_size' => 2 * 1024 * 1024,
             ],
             'callbacks' => [
-                SwooleEvent::ON_WORKER_START => [Bootstrap\WorkerStartCallback::class, 'onWorkerStart'],
-                SwooleEvent::ON_PIPE_MESSAGE => [Bootstrap\PipeMessageCallback::class, 'onPipeMessage'],
-                SwooleEvent::ON_WORKER_EXIT => [Bootstrap\WorkerExitCallback::class, 'onWorkerExit'],
+//                SwooleEvent::ON_WORKER_START => [Bootstrap\WorkerStartCallback::class, 'onWorkerStart'],
+//                SwooleEvent::ON_PIPE_MESSAGE => [Bootstrap\PipeMessageCallback::class, 'onPipeMessage'],
+//                SwooleEvent::ON_WORKER_EXIT => [Bootstrap\WorkerExitCallback::class, 'onWorkerExit'],
             ],
         ];
     }

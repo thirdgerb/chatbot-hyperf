@@ -75,6 +75,7 @@ class ChatlogSocketIOServiceProvider extends ServiceProvider
                 'SIGN' => Handlers\SignHandler::class,
                 'REGISTER' => Handlers\RegisterHandler::class,
                 'JOIN' => Handlers\JoinHandler::class,
+                'REJOIN' => Handlers\RejoinHandler::class,
                 'USER_LOGOUT' => Handlers\UserLogoutHandler::class,
                 'LEAVE' => Handlers\LeaveHandler::class,
                 'INPUT' => Handlers\InputHandler::class,
