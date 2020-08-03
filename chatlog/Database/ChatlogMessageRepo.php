@@ -145,7 +145,7 @@ class ChatlogMessageRepo
             ->where('session', '=', $session)
             ->limit($limit)
             ->orderBy('id', 'asc')
-            ->get(['data']);
+            ->get(['id', 'data']);
 
         return $this->unpackCollection($collection);
     }
@@ -175,7 +175,7 @@ class ChatlogMessageRepo
             ->where('id', '>', $vernier)
             ->limit($limit)
             ->orderBy('id', 'asc')
-            ->get(['data']);
+            ->get(['id', 'data']);
 
         return $this->unpackCollection($collection);
     }
@@ -192,7 +192,7 @@ class ChatlogMessageRepo
             ->where('id', '<', $vernier)
             ->limit($limit)
             ->orderBy('id', 'desc')
-            ->get(['data']);
+            ->get(['id', 'data']);
 
         return $this->unpackCollection($collection);
     }
