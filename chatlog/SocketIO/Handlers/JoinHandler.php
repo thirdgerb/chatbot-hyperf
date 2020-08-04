@@ -18,6 +18,7 @@ use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Commune\Chatlog\SocketIO\Protocal\JoinedRoom;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Protocals\HostMsg\Convo\EventMsg;
+use Commune\Protocals\HostMsg\DefaultEvents;
 use Hyperf\SocketIOServer\BaseNamespace;
 use Hyperf\SocketIOServer\Socket;
 
@@ -62,7 +63,7 @@ class JoinHandler extends ChatlogEventHandler
         $roomOption = $this->getRoomService()->findRoom($room->scene);
 
         if ($roomOption->bot) {
-            $event = EventMessage::instance(EventMsg::EVENT_CLIENT_CONNECTION);
+            $event = EventMessage::instance(DefaultEvents::EVENT_CLIENT_CONNECTION);
             $newInput = new InputInfo([
                 'session' => $room->session,
                 'scene' => $room->scene,

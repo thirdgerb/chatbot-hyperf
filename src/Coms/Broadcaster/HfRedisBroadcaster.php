@@ -88,10 +88,6 @@ class HfRedisBroadcaster extends AbsBroadcaster
             $redis->publish($shellChan, $publish);
             $redis->publish($sessionChan, $publish);
 
-            if (CommuneEnv::isDebug()) {
-                $this->logger->debug(__METHOD__ . " publish $shellChan/$sessionChan: $publish");
-            }
-
         } catch (\Throwable $e) {
             $this->logger->error($e);
 
