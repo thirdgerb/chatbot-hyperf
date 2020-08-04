@@ -299,16 +299,22 @@ abstract class ChatlogEventHandler extends AbsEventHandler
     {
         $batches = $packer->outputBatches;
         if (!empty($batches)) {
-
             $saving = [];
             foreach ($batches as $batch) {
                 $room = $service->findRoom($batch->scene);
+
+                // 找不到房间, 无法判断规则时, 默认群发
                 if (empty($room)) {
-                    $logger->error(
-                        __METHOD__
-                        . ' message room not found, batch info '
-                        . $batch->toJson(JSON_UNESCAPED_UNICODE)
-                    );
+                    $response = new ChatlogSioResponse([
+                        'event' => $batch->getEvent(),
+                        'trace' => $packer->trace,
+                        'proto' => $batch,
+                    ]);
+
+                    $packer
+                        ->emitter
+                        ->to($batch->session)
+                        ->emit($response->event, $response->toEmit());
                     continue;
                 }
 
