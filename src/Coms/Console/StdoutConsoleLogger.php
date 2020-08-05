@@ -33,7 +33,13 @@ class StdoutConsoleLogger implements ConsoleLogger
 
     public function log($level, $message, array $context = array())
     {
-        $message = strval($message). ' ' . json_encode($context);
+        $json = empty($context)
+            ? ''
+            : json_encode(
+                $context,
+                JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+            );
+        $message = strval($message). ' ' . $json;
         $message = IConsoleLogger::wrapMessage($level, $message);
         $this->output->writeln("[$level]" . $message);
     }
