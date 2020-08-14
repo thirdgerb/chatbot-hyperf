@@ -16,7 +16,7 @@ use Commune\Protocals\HostMsg\IntentMsg;
 use Commune\Protocals\Intercom\OutputMsg;
 use Commune\Protocals\IntercomMsg;
 use Commune\Chatlog\SocketIO\Messages\TextMessage;
-use Commune\Support\Utils\MarkdownUtils;
+use Commune\Support\Markdown\MarkdownUtils;
 
 class ChatlogWebAdapter extends AbsSIOAdapter
 {

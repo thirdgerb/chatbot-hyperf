@@ -53,6 +53,7 @@ class HfGhostConfig extends IGhostConfig
             'components' => [
                 // 测试用例
                 Components\Demo\DemoComponent::class,
+                Components\Markdown\MarkdownComponent::class,
             ],
 
             // request protocals
@@ -87,7 +88,7 @@ class HfGhostConfig extends IGhostConfig
                 GhostCmd\Super\ProcessCmd::class,
                 GhostCmd\Super\IntentCmd::class,
                 GhostCmd\Super\RedirectCmd::class,
-                GhostCmd\Super\EnvCmd::class,
+                GhostCmd\Super\SceneCmd::class,
             ],
 
             'comprehensionPipes' => [

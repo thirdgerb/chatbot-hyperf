@@ -10,6 +10,7 @@ use Commune\Protocals\HostMsg;
 use Commune\Blueprint\Kernel\Protocals;
 use Commune\Blueprint\Kernel\Handlers;
 use Commune\Shell\Providers\ShellSessionServiceProvider;
+use Commune\Shell\Render\SystemIntentRenderer;
 use Commune\Shell\Render\TranslatorRenderer;
 use Commune\Support\Protocal\ProtocalOption;
 
@@ -74,6 +75,25 @@ class HfShellConfig extends IShellConfig
                 'inputParser' => [
                     'interface' => InputParser::class,
                     'protocal' => HostMsg::class,
+                ],
+
+                /**
+                 * Renderer
+                 */
+                // 系统命令的 handler
+                'systemIntentRenderer' => [
+                    'protocal' => HostMsg\IntentMsg::class,
+                    'interface' => Renderer::class,
+                    'handlers' => [
+                        [
+                            'handler' => SystemIntentRenderer::class,
+                            'filters' => [
+                                'system.*'
+                            ],
+                            'params' => [],
+                        ],
+                    ],
+                    'default' => TranslatorRenderer::class,
                 ],
 
                 /**
