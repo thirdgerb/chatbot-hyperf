@@ -53,6 +53,7 @@ class HfGhostConfig extends IGhostConfig
             'components' => [
                 // 测试用例
                 Components\Demo\DemoComponent::class,
+                Components\Tree\TreeComponent::class,
                 Components\Markdown\MarkdownComponent::class,
             ],
 
