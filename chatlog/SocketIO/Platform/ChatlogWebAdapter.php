@@ -4,11 +4,13 @@
 namespace Commune\Chatlog\SocketIO\Platform;
 
 
+use Commune\Chatlog\SocketIO\Messages\BiliMessage;
 use Commune\Chatlog\SocketIO\Messages\ChatlogMessage;
 use Commune\Chatlog\SocketIO\Messages\EventMessage;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Message\Host\Convo\IEventMsg;
 use Commune\Message\Host\Convo\IText;
+use Commune\Message\Host\Convo\Media\BiliVideoMsg;
 use Commune\Message\Host\Convo\Verbal\JsonMsg;
 use Commune\Message\Host\Convo\Verbal\MarkdownMsg;
 use Commune\Protocals\HostMsg;
@@ -39,8 +41,8 @@ class ChatlogWebAdapter extends AbsSIOAdapter
         $hostMsg = $message->getMessage();
         return $hostMsg instanceof HostMsg\Convo\VerbalMsg
             || $hostMsg instanceof HostMsg\IntentMsg
-            || $hostMsg instanceof HostMsg\Convo\EventMsg;
-        // todo 还有 视频 / 命令等.
+            || $hostMsg instanceof HostMsg\Convo\EventMsg
+            || $hostMsg instanceof BiliVideoMsg;
     }
 
     public function parseMessageMode(IntercomMsg $message): int
@@ -112,6 +114,7 @@ class ChatlogWebAdapter extends AbsSIOAdapter
                     'id' => $id,
                     'text' => MarkdownUtils::quote($hostMsg->getText()),
                     'md' => true,
+                    'level' => $hostMsg->getLevel(),
                 ])
             ];
         }
@@ -122,6 +125,7 @@ class ChatlogWebAdapter extends AbsSIOAdapter
                     'id' => $id,
                     'text' => $hostMsg->getText(),
                     'md' => true,
+                    'level' => $hostMsg->getLevel(),
                 ])
             ];
         }
@@ -131,6 +135,7 @@ class ChatlogWebAdapter extends AbsSIOAdapter
               new TextMessage([
                   'id' => $id,
                   'text' => $hostMsg->getQuery(),
+                  'level' => $hostMsg->getLevel(),
               ])
             ];
         }
@@ -140,7 +145,20 @@ class ChatlogWebAdapter extends AbsSIOAdapter
                 new TextMessage([
                     'id' => $id,
                     'text' => $hostMsg->getText(),
+                    'level' => $hostMsg->getLevel(),
                 ])
+            ];
+        }
+
+        if ($hostMsg instanceof BiliVideoMsg) {
+            return [
+                new BiliMessage([
+                    'id' => $id,
+                    'resource' => $hostMsg->getResource(),
+                    'text' => $hostMsg->getText(),
+                    'level' => $hostMsg->getLevel(),
+                ])
+
             ];
         }
 

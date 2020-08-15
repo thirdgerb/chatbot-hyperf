@@ -4,6 +4,7 @@
 namespace Commune\Chatlog\SocketIO\Messages;
 
 
+use Commune\Protocals\HostMsg;
 use Commune\Support\Message\AbsMessage;
 use Commune\Support\Struct\Struct;
 use Commune\Support\Uuid\HasIdGenerator;
@@ -26,6 +27,7 @@ class ChatlogMessage extends AbsMessage implements HasIdGenerator
         return [
             'id' => '',
             'type' => '',
+            'level' => HostMsg::INFO,
         ];
     }
 
@@ -38,12 +40,14 @@ class ChatlogMessage extends AbsMessage implements HasIdGenerator
         $this->_data[$name] = $value;
     }
 
-    public static function create(array $data = []): Struct
+    public static function createMessage(array $data = []): Struct
     {
         $type = $data['type'] ?? 'text';
         switch ($type) {
             case self::MESSAGE_TEXT:
-                return new TextMessage($data);
+                return TextMessage::create($data);
+            case self::MESSAGE_BILI :
+                return BiliMessage::create($data);
             default :
                 return parent::create($data);
         }

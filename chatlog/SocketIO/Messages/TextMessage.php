@@ -3,6 +3,8 @@
 
 namespace Commune\Chatlog\SocketIO\Messages;
 
+use Commune\Protocals\HostMsg;
+
 /**
  * @property-read string $id
  * @property-read string $type
@@ -12,9 +14,9 @@ namespace Commune\Chatlog\SocketIO\Messages;
 class TextMessage extends ChatlogMessage
 {
 
-    public static function instance(string $text) : TextMessage
+    public static function instance(string $text, string $level = HostMsg::INFO) : TextMessage
     {
-        return new static(['text' => $text]);
+        return new static(['text' => $text, 'level' => $level]);
     }
 
     public static function stub(): array
@@ -23,6 +25,7 @@ class TextMessage extends ChatlogMessage
             'id' => '',
             'type' => ChatlogMessage::MESSAGE_TEXT,
             'text' => '',
+            'level' => HostMsg::INFO,
             'md' => false,
         ];
     }

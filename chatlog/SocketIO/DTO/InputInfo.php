@@ -34,7 +34,7 @@ class InputInfo extends AbsMessage
     {
         $this->_data[$name] = $value instanceof ChatlogMessage
             ? $value
-            :ChatlogMessage::create($value);
+            :ChatlogMessage::createMessage($value);
     }
 
     public static function relations(): array

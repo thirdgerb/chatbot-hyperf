@@ -58,6 +58,11 @@ abstract class AbsSIOAdapter implements Adapter
 
     abstract public function parseHostMsg(ChatlogMessage $message): ? HostMsg;
 
+    /**
+     * 过滤 ghost 返回的消息.
+     * @param IntercomMsg $message
+     * @return bool
+     */
     abstract public function filterIntercomMessage(IntercomMsg $message): bool;
 
     abstract public function parseMessageMode(IntercomMsg $message): int;
