@@ -78,9 +78,10 @@ class ChatlogMessageRepo
         if (SwooleUtils::isInCoroutine()) {
 
             // 使用协程保存.
-            Coroutine::create(function(Builder $builder, $data) {
+            Coroutine::create(function($data) {
+                $builder = $this->newBuilder();
                 $builder->insert($data);
-            }, $this->newBuilder(), $data);
+            },  $data);
 
             return true;
         }
