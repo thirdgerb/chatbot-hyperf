@@ -44,6 +44,7 @@ class ChatlogSocketIOPlatformConfig extends HfSocketIOPlatformConfig
                             'name' => 'chatlog_1',
                             'host' => env('CHATLOG_SOCKET_IO_HOST', '127.0.0.1'),
                             'port' => env('CHATLOG_SOCKET_IO_PORT', 9510),
+                            'path' => env('CHATLOG_SOCKET_IO_PATH', '/socket.io/')
                         ],
                     ],
                     'processes' => [
