@@ -102,7 +102,7 @@ class RoomService
      */
     public function isSupervisor(UserInfo $user) : bool
     {
-        return $user->level === Supervise::SUPERVISOR;
+        return $user->level >= Supervise::SUPERVISOR;
     }
 
     /**
