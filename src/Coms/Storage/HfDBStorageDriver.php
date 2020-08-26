@@ -352,65 +352,133 @@ class HfDBStorageDriver implements StorageDriver
         );
     }
 
+    public function searchOptions(
+        CategoryOption $categoryOption,
+        StorageOption $storageOption,
+        string $query,
+        int $offset = 0,
+        int $limit = 20
+    ): array
+    {
+        $builder = $this->newBuilder();
+        $cateName = $categoryOption->name;
+        $builder = OptionRepository::searchBuilder($builder, $query);
+
+        $collection = OptionRepository::paginateCategory(
+            $builder,
+            $cateName,
+            $offset,
+            $limit,
+            ['data']
+        );
+
+        $optionClass = $categoryOption->optionClass;
+        return array_map(
+            function(\stdClass $data) use ($optionClass){
+                $se = $data->data;
+                return $this->unserializeOption($se, $optionClass);
+            },
+            $collection
+        );
+    }
+
+
     public function searchIds(
         CategoryOption $categoryOption,
         StorageOption $storageOption,
-        string $wildcardId
+        string $query,
+        int $offset = 0,
+        int $limit = 20
     ): array
     {
-        $len = mb_strlen($wildcardId);
-
-        if ($wildcardId[0] === '*') {
-            $wildcardId[0] = '%';
-        }
-
-        $last = $len - 1;
-        if ($wildcardId[$last] === '*') {
-            $wildcardId[$last] = '%';
-        }
-
+        $builder = $this->newBuilder();
         $cateName = $categoryOption->name;
+        $builder = OptionRepository::searchBuilder($builder, $query);
 
-        $collection = $this->newBuilder()
-            ->where('category_name', '=', $cateName)
-            ->where('option_id', 'like', $wildcardId)
-            ->orderBy('created_at', 'desc')
-            ->get(['option_id']);
+        $collection = OptionRepository::paginateCategory(
+            $builder,
+            $cateName,
+            $offset,
+            $limit,
+            ['option_id']
+        );
 
+        return array_map(function($data) {
+            return $data->option_id;
+        }, $collection);
+    }
+
+
+    public function searchCount(
+        CategoryOption $categoryOption,
+        StorageOption $storageOption,
+        string $query
+    ): int
+    {
+        $builder = $this->newBuilder();
+        $cateName = $categoryOption->name;
+        $builder = OptionRepository::searchBuilder($builder, $query);
+
+        return $builder->where('categry_name', '=', $cateName)->count();
+    }
+
+
+
+    public function paginateOptions(
+        CategoryOption $categoryOption,
+        StorageOption $storageOption,
+        int $offset = 0,
+        int $limit = 20
+    ): array
+    {
+        $cateName = $categoryOption->name;
+        $builder = $this->newBuilder();
+
+        $collection = OptionRepository::paginateCategory(
+            $builder,
+            $cateName,
+            $offset,
+            $limit,
+            ['data']
+        );
+
+        $optionClass = $categoryOption->optionClass;
         return array_map(
-            function(\stdClass $data) {
-                return $data->option_id;
+            function(\stdClass $data) use ($optionClass){
+                $se = $data->data;
+                return $this->unserializeOption($se, $optionClass);
             },
-            $collection->all()
+            $collection
         );
     }
+
 
     public function eachId(
         CategoryOption $categoryOption,
         StorageOption $storageOption
     ): \Generator
     {
-        $builder = $this->newBuilder();
         $cateName = $categoryOption->name;
 
-        $count = OptionRepository::countCategory($builder, $cateName);
-        $i = 0;
-        while ($i < $count) {
+        $vernier = 0;
+        while (true) {
 
+            $builder = $this->newBuilder();
             $data = OptionRepository::paginateCategory(
-                $this->newBuilder(),
+                $builder,
                 $cateName,
-                $i,
+                0,
                 1,
-                ['option_id']
+                ['id', 'option_id'],
+                $vernier
             );
 
             if (empty($data)) {
                 break;
             }
 
+            $vernier = $data[0]->id;
             yield $data[0]->option_id;
-            $i ++;
         }
     }
 
