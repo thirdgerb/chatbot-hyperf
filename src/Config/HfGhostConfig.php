@@ -3,15 +3,21 @@
 namespace Commune\Chatbot\Hyperf\Config;
 
 use Commune\Blueprint\Configs\GhostConfig;
+use Commune\Chatbot\Hyperf\Coms\SpaCyNLU\HFSpaCyNLUClient;
 use Commune\Ghost\IGhostConfig;
 use Commune\Components;
+use Commune\Ghost\Predefined\Join\JoinCmd;
 use Commune\Kernel\GhostCmd;
 use Commune\Ghost\Providers as GhostProviders;
 use Commune\Chatbot\Hyperf\Providers as HfProviders;
-use Commune\Components\Predefined\Intent\Navigation;
+use Commune\Ghost\Predefined\Intent\Navigation;
 use Commune\Kernel\Handlers\IGhostRequestHandler;
 use Commune\Blueprint\Kernel\Protocals\GhostRequest;
 use Commune\Blueprint\Kernel\Handlers\GhostRequestHandler;
+use Commune\Blueprint\NLU\NLUService;
+use Commune\Chatbot\Hyperf\Coms\Storage\HfDBStorageOption;
+use Commune\Blueprint\CommuneEnv;
+use Commune\Components\Markdown\Options\MDGroupOption;
 
 
 /**
@@ -51,10 +57,53 @@ class HfGhostConfig extends IGhostConfig
             'options' => [],
 
             'components' => [
-                // 测试用例
+                // 内部测试用例
                 Components\Demo\DemoComponent::class,
+                // 树形结构对话
                 Components\Tree\TreeComponent::class,
-                Components\Markdown\MarkdownComponent::class,
+
+                // markdown 文库
+                Components\Markdown\MarkdownComponent::class => [
+
+                    'reset' => CommuneEnv::isResetRegistry(),
+                    'groups' => [
+                        MDGroupOption::defaultOption(),
+                    ],
+                    'docStorage' => null,
+                    'docInitialStorage' => null,
+                    'sectionStorage' => [
+                        'wrapper' => HfDBStorageOption::class,
+                    ],
+                ],
+
+
+                // heed fallback
+                Components\HeedFallback\HeedFallbackComponent::class => [
+                    'strategies' => [
+                        Components\HeedFallback\HeedFallbackComponent::defaultStrategy(),
+                        'storage' => [
+                            'wrapper' => HfDBStorageOption::class,
+                        ],
+                    ],
+                ],
+
+                // SpaCy-NLU
+                Components\SpaCyNLU\SpaCyNLUComponent::class => [
+                    'host' => env('SPACY_NLU_HOST', '127.0.0.1:10830'),
+                    'requestTimeOut' => 0.3,
+
+                    'nluModuleConfig' => [
+                        'matchLimit' => 5,
+                        'threshold' => 0.75,
+                        'dataPath' => env('SPACY_NLU_INTENTS_DATA', __DIR__ . '/resources/data/intents.json'),
+                    ],
+                    'chatModuleConfig' => [
+                        'threshold' => 0.75,
+                        'dataPath' => env('SPACY_NLU_CHATS_DATA', __DIR__ . '/resources/data/chats.json'),
+                    ],
+
+                    'httpClient' => HFSpaCyNLUClient::class,
+                ],
             ],
 
             // request protocals
@@ -78,7 +127,7 @@ class HfGhostConfig extends IGhostConfig
                 GhostCmd\User\BackCmd::class,
                 GhostCmd\User\RepeatCmd::class,
                 GhostCmd\User\RestartCmd::class,
-                Components\Predefined\Join\JoinCmd::class,
+                JoinCmd::class,
             ],
 
             // 管理员命令
@@ -90,10 +139,11 @@ class HfGhostConfig extends IGhostConfig
                 GhostCmd\Super\IntentCmd::class,
                 GhostCmd\Super\RedirectCmd::class,
                 GhostCmd\Super\SceneCmd::class,
+                GhostCmd\Super\WhereCmd::class,
             ],
 
-            'comprehensionPipes' => [
-
+            'comprehendPipes' => [
+                NLUService::class,
             ],
 
             'mindPsr4Registers' => [
@@ -106,7 +156,7 @@ class HfGhostConfig extends IGhostConfig
             'maxRequestFailTimes' => 3,
             'mindsetCacheExpire' => 600,
             'maxBacktrace' => 3,
-            'defaultContextName' => Components\Demo\Contexts\DemoHome::genUcl()->encode(),
+            'defaultContextName' => 'md.demo.commune_v2_intro',
             'sceneContextNames' => [
             ],
             'globalContextRoutes' => [
@@ -116,6 +166,7 @@ class HfGhostConfig extends IGhostConfig
                 Navigation\HomeInt::genUcl()->encode(),
                 Navigation\BackwardInt::genUcl()->encode(),
                 Navigation\RestartInt::genUcl()->encode(),
+                Navigation\WrongInt::genUcl()->encode(),
             ]
         ];
 

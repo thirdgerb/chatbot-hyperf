@@ -6,7 +6,6 @@ namespace Commune\Chatlog\SocketIO\Coms\Room;
 
 use Commune\Chatlog\SocketIO\Coms\EmitterAdapter;
 use Commune\Chatlog\SocketIO\Coms\RoomService;
-use Commune\Chatlog\SocketIO\DTO\InputInfo;
 use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Commune\Chatlog\SocketIO\Handlers\ChatlogEventHandler;
 use Commune\Chatlog\SocketIO\Protocal\ChatlogSioRequest;

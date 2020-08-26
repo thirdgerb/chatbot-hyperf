@@ -41,12 +41,14 @@ class OptionRepository
         return $builder->where('uuid', '=', $uuid)->first($columns);
     }
 
+
     /**
      * @param Builder $builder
      * @param string $cateName
      * @param int $offset
      * @param int $limit
-     * @param string[] $columns
+     * @param array $columns
+     * @param int|null $vernier
      * @return \stdClass[]
      */
     public static function paginateCategory(
@@ -54,12 +56,17 @@ class OptionRepository
         string $cateName,
         int $offset,
         int $limit,
-        array $columns = ['*']
+        array $columns = ['*'],
+        int $vernier = null
     ) : array
     {
-        $collection = $builder
-            ->where('category_name', '=', $cateName)
-            ->orderBy('id', 'desc')
+
+        $builder = $builder->where('category_name', '=', $cateName);
+        if (isset($vernier)) {
+            $builder = $builder->where('id', '>', $vernier);
+        }
+
+        $collection = $builder->orderBy('id', 'asc')
             ->offset($offset)
             ->limit($limit)
             ->get($columns);
@@ -102,6 +109,20 @@ class OptionRepository
                 'data' => $serialized,
             ]
         );
+    }
+
+    public static function searchBuilder(
+        Builder $builder,
+        string $query
+    ) : Builder
+    {
+        return $builder
+            ->whereNested(function(Builder $builder) use ($query) {
+                return $builder
+                    ->where('option_id', 'like', "%$query%")
+                    ->where('title', 'like', "%$query%");
+
+            }, 'or');
     }
 
     public static function createTable(Blueprint $table) : void

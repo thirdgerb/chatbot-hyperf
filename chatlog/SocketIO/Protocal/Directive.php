@@ -23,8 +23,8 @@ class Directive extends ChatlogResProtocal
             'name' => '',
             'trigger' => '',
             'payload' => [],
-            'createdAt' => $now = time(),
-            'expiredAt' => $now + 10,
+            'createdAt' => $now = intval(microtime(true) * 1000),
+            'expiredAt' => $now + 10000,
         ];
     }
 

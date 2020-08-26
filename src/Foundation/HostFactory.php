@@ -25,7 +25,7 @@ class HostFactory
         $procContainer = $this->prepareContainer($container);
         $hfConsole = $container->get(StdoutLoggerInterface::class);
 
-        $console = new StdoutConsoleLogger($hfConsole);
+        $console = new StdoutConsoleLogger();
         $config = $container->get(HostConfig::class);
 
         $host = new IHost(

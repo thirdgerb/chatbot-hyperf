@@ -373,7 +373,6 @@ abstract class ChatlogEventHandler extends AbsEventHandler
             'messages' => [
                 $message
             ],
-            'createdAt' => time(),
         ]);
         return $request->makeResponse($batch);
     }

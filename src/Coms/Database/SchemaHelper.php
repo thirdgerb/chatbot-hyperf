@@ -19,11 +19,4 @@ class SchemaHelper
         return $table->string($name);
     }
 
-    public static function timestamps(Blueprint $table) : void
-    {
-        $table->timestamp('created_at')->default(CURRENT_TIMESTAMP);
-    }
-
-
-
 }

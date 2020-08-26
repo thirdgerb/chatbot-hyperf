@@ -3,13 +3,13 @@
 
 namespace Commune\Chatlog\SocketIO\Platform;
 
+use Commune\Blueprint\Ghost\Cloner\ClonerScene;
 use Commune\Blueprint\Platform\Adapter;
 use Commune\Blueprint\Platform\Packer;
 use Commune\Chatlog\SocketIO\Coms\EmitterAdapter;
 use Commune\Chatlog\SocketIO\DTO\UserInfo;
 use Commune\Chatlog\SocketIO\Protocal\MessageBatch;
 use Commune\Protocals\Comprehension;
-use Commune\Protocals\HostMsg\IntentMsg;
 
 class ChatlogWebPacker implements Packer
 {
@@ -67,6 +67,11 @@ class ChatlogWebPacker implements Packer
         $this->emitter = $emitter;
         $this->input = $input;
         $this->user = $user;
+        if (!empty($user)) {
+            $this->env = [
+                ClonerScene::ENV_USER_LEVEL => $user->level
+            ];
+        }
     }
 
 

@@ -8,6 +8,7 @@ use Commune\Host\IHostConfig;
 use Commune\Blueprint\Configs\HostConfig;
 use Commune\Chatbot\Hyperf\Providers as HfProviders;
 use Hyperf\Redis\RedisFactory;
+use Commune\NLU\NLUServiceProvider;
 
 /**
  * 对话机器人 Host 的默认配置.
@@ -86,6 +87,9 @@ class HfHostConfig extends IHostConfig
                 Framework\Providers\LoggerByMonologProvider::class => [
                     'name' => 'commune',
                 ],
+
+                // nlu 组件
+                NLUServiceProvider::class,
 
                 /* req services */
 

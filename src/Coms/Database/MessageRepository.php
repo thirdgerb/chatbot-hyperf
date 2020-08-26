@@ -191,8 +191,8 @@ class MessageRepository
         $messageData['createdAt'] = $createdAt->timestamp;
 
         return $isInput
-            ? new IInputMsg($messageData)
-            : new IOutputMsg($messageData);
+            ? IInputMsg::create($messageData)
+            : IOutputMsg::create($messageData);
     }
 
     public static function saveIntercomMsg(

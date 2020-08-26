@@ -24,7 +24,7 @@ class InputInfo extends AbsMessage
             'session' => '',
             'scene' => '',
             'bot' => true,
-            'createdAt' => time(),
+            'createdAt' => intval(microtime(true) * 1000),
             'query' => [],
             'message' => [],
         ];

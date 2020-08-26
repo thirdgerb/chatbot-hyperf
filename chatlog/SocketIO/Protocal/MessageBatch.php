@@ -45,7 +45,7 @@ class MessageBatch extends ChatlogResProtocal implements HasIdGenerator
             'suggestions' => [],
             'messages' => [
             ],
-            'createdAt' => time(),
+            'createdAt' => intval(microtime(true) * 1000),
         ];
     }
 
