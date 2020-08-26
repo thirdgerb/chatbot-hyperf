@@ -22,7 +22,7 @@ use Commune\Support\Option\AbsOption;
  * @property-read string $category  房间的分类. 给用户推荐时可以按分类来排列.
  *
  * ## 机器人相关的逻辑
- * @property-read bool $bot         房间默认是否对机器人.
+ * @property-read bool|null $bot         房间默认是否对机器人.
  * @property-read string $botName   房间里机器人的昵称.
  *
  * ## 权限管理.
@@ -69,6 +69,7 @@ class RoomOption extends AbsOption
             // 机器人相关信息
             'bot' => true,
             'botName' => 'Commune',
+            'entry' => '',
 
             // 权限基本信息.
             'level' => Supervise::GUEST,

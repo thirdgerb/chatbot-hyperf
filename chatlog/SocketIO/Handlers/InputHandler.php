@@ -65,7 +65,7 @@ class InputHandler extends ChatlogEventHandler
         );
 
         // 如果发送给机器人.
-        if ($input->bot) {
+        if ($input->bot === true) {
             $this->deliverToChatbot(
                 $request,
                 $room,

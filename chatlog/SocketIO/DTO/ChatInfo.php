@@ -3,7 +3,6 @@
 
 namespace Commune\Chatlog\SocketIO\DTO;
 
-use Commune\Chatlog\SocketIO\Coms\RoomOption;
 use Commune\Support\Message\AbsMessage;
 use Commune\Support\Utils\TypeUtils;
 
@@ -13,7 +12,7 @@ use Commune\Support\Utils\TypeUtils;
  * @property-read string $icon      默认图标
  * @property-read string $session   sessionId. 不可为空.
  * @property-read bool $closable    是否可以关闭.
- * @property-read bool $bot         默认和机器人对话.
+ * @property-read bool|null $bot    是否和机器人对话. false 表示人工, null 表示不能切换.
  */
 class ChatInfo extends AbsMessage
 {
