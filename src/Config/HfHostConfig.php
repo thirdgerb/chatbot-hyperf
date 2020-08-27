@@ -101,9 +101,6 @@ class HfHostConfig extends IHostConfig
             ],
 
             'components' => [
-                // 加载 resources 资源
-                \Commune\Components\Resource\ResourceComponent::class,
-
             ],
 
             'ghost' => [],
