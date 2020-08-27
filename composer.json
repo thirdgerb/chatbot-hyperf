@@ -46,11 +46,5 @@
         "hyperf": {
             "config": "Commune\\Chatbot\\Hyperf\\ConfigProvider"
         }
-    },
-    "repositories" : [
-        {
-            "type": "path",
-            "url": "../chatbot"
-        }
-    ]
+    }
 }
