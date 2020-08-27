@@ -155,6 +155,12 @@ class StartCommuneHost extends Command
             BASE_PATH . "/commune"
         ));
 
+        CommuneEnv::defineConfigPath(env(
+            'COMMUNE_BATH_PATH',
+            BASE_PATH . "/commune/config"
+        ));
+
+
         CommuneEnv::defineResourcePath(env(
             'COMMUNE_RESOURCE_PATH',
             BASE_PATH . "/commune/resources"
@@ -163,7 +169,7 @@ class StartCommuneHost extends Command
         // 与 hyperf 的 runtime 分开, 避免被波及
         CommuneEnv::defineRuntimePath(env(
             'COMMUNE_RUNTIME_PATH',
-            BASE_PATH . "/commune/runtime"
+            BASE_PATH . "/runtime"
         ));
 
         CommuneEnv::defineLogPath(env(
