@@ -49,6 +49,7 @@ class OptionRepository
      * @param int $limit
      * @param array $columns
      * @param int|null $vernier
+     * @param string|null $search
      * @return \stdClass[]
      */
     public static function paginateCategory(
@@ -57,29 +58,48 @@ class OptionRepository
         int $offset,
         int $limit,
         array $columns = ['*'],
-        int $vernier = null
+        int $vernier = null,
+        string $search = null
     ) : array
     {
-
         $builder = $builder->where('category_name', '=', $cateName);
         if (isset($vernier)) {
             $builder = $builder->where('id', '>', $vernier);
         }
 
-        $collection = $builder->orderBy('id', 'asc')
+        if (isset($search)) {
+            $builder = $builder->where(function(Builder $builder) use ($search){
+                return $builder
+                    ->where('option_id', 'like', "%$search%")
+                    ->orWhere('title', 'like', "%$search%");
+            });
+        }
+
+        $builder = $builder->orderBy('id', 'asc')
             ->offset($offset)
-            ->limit($limit)
-            ->get($columns);
+            ->limit($limit);
+
+        $collection = $builder->get($columns);
 
         return $collection->all();
     }
 
     public static function countCategory(
         Builder $builder,
-        string $cateName
+        string $cateName,
+        string $search = null
     ) : int
     {
-        return $builder->where('category_name', '=', $cateName)->count();
+        $builder = $builder->where('category_name', '=', $cateName);
+        if (isset($search)) {
+            $builder = $builder->where(function(Builder $builder) use ($search) {
+                return $builder
+                    ->where('option_id', 'like', "%$search%")
+                    ->orWhere('title', 'like', "%$search%");
+            });
+        }
+
+        return $builder->count();
     }
 
     public static function deleteByUuid(
@@ -109,20 +129,6 @@ class OptionRepository
                 'data' => $serialized,
             ]
         );
-    }
-
-    public static function searchBuilder(
-        Builder $builder,
-        string $query
-    ) : Builder
-    {
-        return $builder
-            ->whereNested(function(Builder $builder) use ($query) {
-                return $builder
-                    ->where('option_id', 'like', "%$query%")
-                    ->where('title', 'like', "%$query%");
-
-            }, 'or');
     }
 
     public static function createTable(Blueprint $table) : void

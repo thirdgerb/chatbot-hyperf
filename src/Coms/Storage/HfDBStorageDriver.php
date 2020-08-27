@@ -116,7 +116,7 @@ class HfDBStorageDriver implements StorageDriver
     public function serializeOption(Option $option) : string
     {
         $arr = $option->toArray();
-        return json_encode($arr);
+        return json_encode($arr, JSON_UNESCAPED_UNICODE);
     }
 
     public function getOptionCacheKey(string $uuid) : string
@@ -362,14 +362,15 @@ class HfDBStorageDriver implements StorageDriver
     {
         $builder = $this->newBuilder();
         $cateName = $categoryOption->name;
-        $builder = OptionRepository::searchBuilder($builder, $query);
 
         $collection = OptionRepository::paginateCategory(
             $builder,
             $cateName,
             $offset,
             $limit,
-            ['data']
+            ['data'],
+            null,
+            $query
         );
 
         $optionClass = $categoryOption->optionClass;
@@ -393,14 +394,15 @@ class HfDBStorageDriver implements StorageDriver
     {
         $builder = $this->newBuilder();
         $cateName = $categoryOption->name;
-        $builder = OptionRepository::searchBuilder($builder, $query);
 
         $collection = OptionRepository::paginateCategory(
             $builder,
             $cateName,
             $offset,
             $limit,
-            ['option_id']
+            ['option_id'],
+            null,
+            $query
         );
 
         return array_map(function($data) {
@@ -417,9 +419,12 @@ class HfDBStorageDriver implements StorageDriver
     {
         $builder = $this->newBuilder();
         $cateName = $categoryOption->name;
-        $builder = OptionRepository::searchBuilder($builder, $query);
 
-        return $builder->where('categry_name', '=', $cateName)->count();
+        return OptionRepository::countCategory(
+            $builder,
+            $cateName,
+            $query
+        );
     }
 
 
