@@ -150,6 +150,9 @@ class StartCommuneHost extends Command
         $resetMind = $input->getOption('reset') ?? false;
         CommuneEnv::defineResetMind($resetMind);
 
+        $debug = $input->getOption('debug') ?? false;
+        CommuneEnv::defineDebug($debug);
+
         CommuneEnv::defineBathPath(env(
             'COMMUNE_BATH_PATH',
             BASE_PATH . "/commune"
@@ -177,8 +180,6 @@ class StartCommuneHost extends Command
             BASE_PATH . '/runtime/logs'
         ));
 
-        $debug = $input->getOption('debug') ?? false;
-        CommuneEnv::defineDebug($debug);
     }
 
 

@@ -3,10 +3,12 @@
 namespace Commune\Chatbot\Hyperf\Config;
 
 use Commune\Blueprint\Configs\GhostConfig;
+use Commune\Chatbot\Hyperf\Coms\HeedFallback\IFallbackSceneRepository;
 use Commune\Chatbot\Hyperf\Coms\SpaCyNLU\HFSpaCyNLUClient;
 use Commune\Ghost\IGhostConfig;
 use Commune\Components;
 use Commune\Ghost\Predefined\Join\JoinCmd;
+use Commune\Ghost\Predefined\Manager\NLUManagerContext;
 use Commune\Kernel\GhostCmd;
 use Commune\Ghost\Providers as GhostProviders;
 use Commune\Chatbot\Hyperf\Providers as HfProviders;
@@ -45,6 +47,12 @@ class HfGhostConfig extends IGhostConfig
                  GhostProviders\MindsetServiceProvider::class,
                 // GhostProviders\MindsetStorageConfigProvider::class,
 
+                // heed fallback
+
+                HfProviders\HFHeedFallbackRepoProvider::class => [
+                    'poolName' => 'default',
+                ],
+
                 /* req service */
 
                 // runtime driver
@@ -81,10 +89,14 @@ class HfGhostConfig extends IGhostConfig
                 Components\HeedFallback\HeedFallbackComponent::class => [
                     'strategies' => [
                         Components\HeedFallback\HeedFallbackComponent::defaultStrategy(),
-                        'storage' => [
-                            'wrapper' => HfDBStorageOption::class,
-                        ],
+
                     ],
+
+                    'storage' => [
+                        'wrapper' => HfDBStorageOption::class,
+                    ],
+
+                    'sceneRepository' => IFallbackSceneRepository::class,
                 ],
 
                 // SpaCy-NLU
@@ -156,9 +168,18 @@ class HfGhostConfig extends IGhostConfig
             'maxRequestFailTimes' => 3,
             'mindsetCacheExpire' => 600,
             'maxBacktrace' => 3,
+
             'defaultContextName' => 'md.demo.commune_v2_intro',
             'sceneContextNames' => [
+                Components\Demo\Maze\Maze::genUcl()->encode(),
+                Components\HeedFallback\Context\TeachTasks::genUcl()->encode(),
+                NLUManagerContext::genUcl()->encode(),
             ],
+
+            'defaultHeedFallback' =>[
+                Components\HeedFallback\Action\HeedFallback::class,
+            ],
+
             'globalContextRoutes' => [
                 Navigation\CancelInt::genUcl()->encode(),
                 Navigation\RepeatInt::genUcl()->encode(),
