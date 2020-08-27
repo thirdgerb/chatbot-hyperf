@@ -96,7 +96,7 @@ class ChatlogSocketIOServiceProvider extends ServiceProvider
 
             'supervisorScene' => 'supervisor',
             'roomOptionFile' => StringUtils::gluePath(
-                CommuneEnv::getResourcePath(),
+                CommuneEnv::getConfigPath(),
                 'chatlog/rooms.php'
             ),
         ];
