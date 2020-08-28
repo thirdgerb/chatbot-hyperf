@@ -50,7 +50,6 @@ class HfServerOption extends AbsOption
 
             ],
 
-
         ];
     }
 

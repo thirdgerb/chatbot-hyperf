@@ -37,7 +37,8 @@
         "hyperf/socketio-server": "^2.0",
         "hyperf/process": "^2.0",
         "lcobucci/jwt": "^3.3",
-        "hyperf/guzzle": "^2.0"
+        "hyperf/guzzle": "^2.0",
+        "symfony/http-foundation": "^5.1"
     },
     "require-dev": {
         "swoft/swoole-ide-helper": "^4.4"

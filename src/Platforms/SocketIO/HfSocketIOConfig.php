@@ -24,7 +24,7 @@ use Commune\Support\Swoole\ServerSettingOption;
  * @property-read string    $sidProvider    hyperf socket.io session id 的提供者.
  * @property-read string    $roomProvider   hyperf socket.io 房间适配器.
  */
-class HfSocketIOOption extends AbsOption
+class HfSocketIOConfig extends AbsOption
 {
 
     public static function stub(): array

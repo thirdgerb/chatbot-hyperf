@@ -5,7 +5,7 @@ namespace Commune\Chatlog;
 
 
 use Commune\Chatbot\Hyperf\Platforms\HfSocketIOPlatformConfig;
-use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOOption;
+use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOConfig;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOPlatform;
 use Commune\Chatlog\SocketIO\ChatlogSocketIOController;
 use Commune\Chatlog\SocketIO\Process\AsyncMessageProcess;
@@ -38,7 +38,7 @@ class ChatlogSocketIOPlatformConfig extends HfSocketIOPlatformConfig
                 ],
             ],
             'options' => [
-                HfSocketIOOption::class => [
+                HfSocketIOConfig::class => [
                     'servers' => [
                         [
                             'name' => 'chatlog_1',

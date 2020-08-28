@@ -4,7 +4,7 @@
 namespace Commune\Chatbot\Hyperf\Platforms;
 
 
-use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOOption;
+use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOConfig;
 use Commune\Chatbot\Hyperf\Platforms\SocketIO\HfSocketIOPlatform;
 use Commune\Platform\IPlatformConfig;
 
@@ -26,7 +26,7 @@ class HfSocketIOPlatformConfig extends IPlatformConfig
 
             ],
             'options' => [
-                HfSocketIOOption::class => [
+                HfSocketIOConfig::class => [
                     'servers' => [
                         'name' => '',
                         'host' => '127.0.0.1',

@@ -20,7 +20,7 @@ use Commune\Chatbot\Hyperf\Servers\HfPlatformOption;
 class HfSocketIOPlatform extends AbsHyperfServerPlatform
 {
     /**
-     * @var null|HfSocketIOOption
+     * @var null|HfSocketIOConfig
      */
     protected $option;
 
@@ -71,12 +71,12 @@ class HfSocketIOPlatform extends AbsHyperfServerPlatform
         }
     }
 
-    public function getSocketIOOption() : HfSocketIOOption
+    public function getSocketIOOption() : HfSocketIOConfig
     {
         return $this->option
             ?? $this->option = $this->host
                 ->getProcContainer()
-                ->make(HfSocketIOOption::class);
+                ->make(HfSocketIOConfig::class);
     }
 
     public function getHyperfPlatformOption(): HfPlatformOption
