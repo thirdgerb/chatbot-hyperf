@@ -42,6 +42,7 @@ class ChatlogWebAdapter extends AbsSIOAdapter
         return $hostMsg instanceof HostMsg\Convo\VerbalMsg
             || $hostMsg instanceof HostMsg\IntentMsg
             || $hostMsg instanceof HostMsg\Convo\EventMsg
+            || $hostMsg instanceof HostMsg\Convo\ContextMsg
             || $hostMsg instanceof BiliVideoMsg;
     }
 
@@ -65,7 +66,7 @@ class ChatlogWebAdapter extends AbsSIOAdapter
     public function parseContextOutput(IntercomMsg $message): array
     {
         $contextMsg = $message->getMessage();
-        if (!$contextMsg instanceof HostMsg\Convo\ContextMsg) {
+        if (!($contextMsg instanceof HostMsg\Convo\ContextMsg)) {
             return [];
         }
         return [
