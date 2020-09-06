@@ -8,7 +8,8 @@
 
 namespace Commune\Chatbot\Hyperf\Providers;
 
-
+use Commune\Blueprint\CommuneEnv;
+use Commune\Support\Utils\StringUtils;
 use Commune\Chatbot\Hyperf\Coms\Storage\HfDBStorageOption;
 use Commune\Contracts\Trans\Translator;
 use Commune\Framework\Providers\TranslatorBySymfonyProvider;
@@ -24,7 +25,12 @@ class HfTranslatorServiceProvider extends TranslatorBySymfonyProvider
                 'wrapper' => HfDBStorageOption::class,
                 'config' => [],
             ],
-            'initStorage' => null
+            'initStorage' => null,
+            'reset' => CommuneEnv::isResetRegistry(),
+            'resource' => StringUtils::gluePath(
+                CommuneEnv::getResourcePath(),
+                'trans'
+            )
         ];
     }
 
