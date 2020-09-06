@@ -62,7 +62,7 @@ class JoinHandler extends ChatlogEventHandler
         // 发送消息给服务端.
         $roomOption = $this->getRoomService()->findRoom($room->scene);
 
-        if ($roomOption->bot) {
+        if ($room->bot === true) {
             $event = EventMessage::instance(DefaultEvents::EVENT_CLIENT_CONNECTION);
             $newInput = new InputInfo([
                 'session' => $room->session,

@@ -174,6 +174,7 @@ class HfGhostConfig extends IGhostConfig
                 Components\Demo\Maze\Maze::genUcl()->encode(),
                 Components\HeedFallback\Context\TeachTasks::genUcl()->encode(),
                 NLUManagerContext::genUcl()->encode(),
+                'md.demo.*'
             ],
 
             'defaultHeedFallback' =>[

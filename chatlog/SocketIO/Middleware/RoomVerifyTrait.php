@@ -27,12 +27,12 @@ trait RoomVerifyTrait
     {
 
         try {
-            $room = new RoomInfo(['scene' => $scene, 'session' => $session]);
+            $room = new RoomInfo($request->proto);
         } catch (InvalidStructException $e) {
             throw new ProtocalException('invalid room data', $e);
         }
 
-        $option = $service->findRoom($room->scene);
+        $option = $service->findRoom($scene);
         if (empty($option)) {
 
             $chatDelete = new ChatDelete([

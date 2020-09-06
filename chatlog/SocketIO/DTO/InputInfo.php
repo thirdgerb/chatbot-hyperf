@@ -12,7 +12,7 @@ use Commune\Support\Message\AbsMessage;
  * @property-read string $session
  * @property-read string $scene
  * @property-read int $createdAt
- * @property-read bool $bot
+ * @property-read bool|null $bot
  * @property-read array $query
  * @property-read ChatlogMessage $message
  */

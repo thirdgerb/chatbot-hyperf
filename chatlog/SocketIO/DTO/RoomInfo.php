@@ -8,6 +8,7 @@ use Commune\Support\Message\AbsMessage;
 /**
  * @property-read string $session
  * @property-read string $scene
+ * @property-read bool|null $bot
  */
 class RoomInfo extends AbsMessage
 {
@@ -16,6 +17,7 @@ class RoomInfo extends AbsMessage
         return [
             'session' => '',
             'scene' => '',
+            'bot' => null,
         ];
     }
 

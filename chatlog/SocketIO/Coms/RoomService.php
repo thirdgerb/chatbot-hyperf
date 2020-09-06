@@ -305,8 +305,13 @@ class RoomService
     {
         if ($toSupervisor) {
             $title = $user->name . ':' . $option->title;
+            $bot = is_null($option->bot)
+                ? null
+                : false;
+
         } else {
             $title = $option->title;
+            $bot = $option->bot;
         }
 
         return new ChatInfo([
@@ -316,7 +321,7 @@ class RoomService
             'session' => $this->makeSessionId($option, $user),
             'closable' => $toSupervisor || $option->closable,
             'autoJoin' => !$toSupervisor && $option->autoJoin ,
-            'bot' => $option->bot,
+            'bot' => $bot,
         ]);
     }
 
