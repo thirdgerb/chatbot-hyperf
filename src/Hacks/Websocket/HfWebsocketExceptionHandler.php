@@ -4,22 +4,23 @@
 namespace Commune\Chatbot\Hyperf\Hacks\Websocket;
 
 
+use Throwable;
 use Commune\Blueprint\Host;
-use Hyperf\ExceptionHandler\ExceptionHandler;
+use Commune\Contracts\Log\ExceptionReporter;
 use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\ExceptionHandler\Formatter\FormatterInterface;
-use Hyperf\HttpMessage\Exception\NotFoundHttpException;
-use Hyperf\HttpMessage\Stream\SwooleStream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
-use Throwable;
-use Hyperf\HttpMessage\Exception\HttpException;
+use Hyperf\WebSocketServer\Exception\Handler\WebSocketExceptionHandler;
 
 
-class HfWebsocketExceptionHandler extends ExceptionHandler
+/**
+ * 用自定义的 ExceptionHandler 代替 Hyperf 默认的.
+ */
+class HfWebsocketExceptionHandler extends WebSocketExceptionHandler
 {
     /**
-     * @var StdoutLoggerInterface
+     * @var LoggerInterface
      */
     protected $logger;
 
@@ -28,33 +29,37 @@ class HfWebsocketExceptionHandler extends ExceptionHandler
      */
     protected $formatter;
 
-    public function __construct(Host $host, FormatterInterface $formatter)
+    /**
+     * @var Host
+     */
+    protected $host;
+
+    public function __construct(
+        Host $host,
+        StdoutLoggerInterface $stdoutLogger,
+        FormatterInterface $formatter
+    )
     {
-        $this->logger = $host->getProcContainer()->make(LoggerInterface::class);
+        parent::__construct($stdoutLogger, $formatter);
+        $this->host = $host;
+        $this->logger = $host
+            ->getProcContainer()
+            ->make(LoggerInterface::class);
         $this->formatter = $formatter;
     }
 
     public function handle(Throwable $throwable, ResponseInterface $response)
     {
-        $stream = new SwooleStream((string) $throwable->getMessage());
-
-        if ($throwable instanceof HttpException) {
-            $code = $throwable->getStatusCode();
-            $this->logger->warning(
-                get_class($throwable)
-                . ": code $code, message " . $throwable->getMessage()
-            );
-
-        } else {
-            $code = 200;
-            $this->logger->warning($this->formatter->format($throwable));
+        if ($throwable instanceof \Error) {
+            /**
+             * @var ExceptionReporter $reporter
+             */
+            $reporter = $this->host->getProcContainer()->make(ExceptionReporter::class);
+            $reporter->report($throwable);
         }
 
-        return $response->withStatus($code)->withBody($stream);
-    }
-
-    public function isValid(Throwable $throwable): bool
-    {
-        return true;
+        $response = parent::handle($throwable, $response);
+        $this->stopPropagation();
+        return $response;
     }
 }
