@@ -73,8 +73,8 @@ class HfShellConfig extends IShellConfig
                  * 负责把输入消息进行转义.
                  */
                 'inputParser' => [
-                    'interface' => InputParser::class,
                     'protocal' => HostMsg::class,
+                    'interface' => InputParser::class,
                 ],
 
                 /**

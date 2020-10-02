@@ -153,33 +153,35 @@ class StartCommuneHost extends Command
         $debug = $input->getOption('debug') ?? false;
         CommuneEnv::defineDebug($debug);
 
-        CommuneEnv::defineBathPath(env(
-            'COMMUNE_BATH_PATH',
-            BASE_PATH . "/commune"
-        ));
+        $basePath = env('COMMUNE_BATH_PATH');
+        $basePath = empty($basePath) ? BASE_PATH . "/commune" : $basePath;
+        CommuneEnv::defineBathPath($basePath);
 
-        CommuneEnv::defineConfigPath(env(
-            'COMMUNE_BATH_PATH',
-            BASE_PATH . "/commune/config"
-        ));
+        $configPath = env('COMMUNE_CONFIG_PATH');
+        $configPath = empty($configPath)
+            ? $basePath . '/config'
+            : $configPath;
+        CommuneEnv::defineConfigPath($configPath);
 
 
-        CommuneEnv::defineResourcePath(env(
-            'COMMUNE_RESOURCE_PATH',
-            BASE_PATH . "/commune/resources"
-        ));
+        $resourcePath = env('COMMUNE_RESOURCE_PATH');
+        $resourcePath = empty($resourcePath)
+            ? $basePath . '/resources'
+            : $resourcePath;
+        CommuneEnv::defineResourcePath($resourcePath);
 
         // 与 hyperf 的 runtime 分开, 避免被波及
-        CommuneEnv::defineRuntimePath(env(
-            'COMMUNE_RUNTIME_PATH',
-            BASE_PATH . "/runtime"
-        ));
+        $runtimePath = env('COMMUNE_RUNTIME_PATH');
+        $runtimePath = empty($runtimePath)
+            ? BASE_PATH . "/runtime"
+            : $runtimePath;
+        CommuneEnv::defineRuntimePath($runtimePath);
 
-        CommuneEnv::defineLogPath(env(
-            'COMMUNE_LOG_PATH',
-            BASE_PATH . '/runtime/logs'
-        ));
-
+        $logPath = env('COMMUNE_LOG_PATH');
+        $logPath = empty($logPath)
+            ? BASE_PATH . '/runtime/logs'
+            : $logPath;
+        CommuneEnv::defineLogPath($logPath);
     }
 
 
