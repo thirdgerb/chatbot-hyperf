@@ -12,6 +12,8 @@ use Commune\Chatlog\SocketIO\Process\AsyncMessageProcess;
 use Commune\Framework\Providers\LoggerByMonologProvider;
 
 /**
+ * Chatlog 项目的 Platform 配置.
+ *
  * @author thirdgerb <thirdgerb@gmail.com>
  */
 class ChatlogSocketIOPlatformConfig extends HfSocketIOPlatformConfig

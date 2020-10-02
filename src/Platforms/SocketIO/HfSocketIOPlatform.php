@@ -15,7 +15,7 @@ use Commune\Chatbot\Hyperf\Servers\AbsHyperfServerPlatform;
 use Commune\Chatbot\Hyperf\Servers\HfPlatformOption;
 
 /**
- * Hyperf 的 Socket.io 端
+ * Hyperf 的 Socket.io Platform 实现.
  */
 class HfSocketIOPlatform extends AbsHyperfServerPlatform
 {
@@ -58,11 +58,14 @@ class HfSocketIOPlatform extends AbsHyperfServerPlatform
          * @var Dispatcher $router
          */
         $factory = $container->get(DispatcherFactory::class);
+
+        // 自动生成路由
         foreach ($option->servers as $serverOption) {
             $router = $factory->getRouter($serverOption->name);
             $router->addRoute('GET', $path, HfSocketIO::class);
         }
 
+        // 添加 socket io 的命名空间.
         $controller = $option->controller;
         SocketIORouter::addNamespace('/', $controller);
         $namespaces = $option->namespaces;

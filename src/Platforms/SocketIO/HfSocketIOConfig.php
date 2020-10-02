@@ -11,15 +11,15 @@ use Commune\Support\Swoole\ServerSettingOption;
 /**
  * Hyperf 中 websocket 服务端使用的配置.
  *
- * @property-read HfSocketIOServerOption[] $servers
- * @property-read ServerSettingOption $settings
+ * @property-read HfSocketIOServerOption[] $servers     Hyperf Server 的配置.
+ * @property-read ServerSettingOption $settings         Swoole 服务器的配置.
  *
  * @property-read string[] $processes       Server 的子进程.
  *
  *
- * @property-read string $path
- * @property-read string[] $namespaces
- * @property-read string $controller
+ * @property-read string $path              访问地址
+ * @property-read string[] $namespaces      命名空间与控制器的关系
+ * @property-read string $controller        默认的控制器
  *
  * @property-read string    $sidProvider    hyperf socket.io session id 的提供者.
  * @property-read string    $roomProvider   hyperf socket.io 房间适配器.
@@ -45,7 +45,6 @@ class HfSocketIOConfig extends AbsOption
 
             'sidProvider' => SocketIOServer\SidProvider\LocalSidProvider::class,
             'roomProvider' => SocketIOServer\Room\RedisAdapter::class,
-
         ];
     }
 
@@ -58,6 +57,10 @@ class HfSocketIOConfig extends AbsOption
     }
 
 
+    /**
+     * 将当前配置转化为标准的 Hyperf 配置.
+     * @return HfPlatformOption
+     */
     public function toHyperfPlatformOption() : HfPlatformOption
     {
         $servers = [];

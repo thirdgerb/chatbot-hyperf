@@ -10,6 +10,9 @@ use Hyperf\Server\SwooleEvent;
 use Commune\Chatbot\Hyperf\Hacks\Websocket\HfWebsocketServer as Server;
 use Commune\Chatbot\Hyperf\Hacks\Websocket\HfWebsocketExceptionHandler;
 
+/**
+ * Hyperf SocketIO 端的 Server 配置.
+ */
 class HfSocketIOServerOption extends HfServerOption
 {
 

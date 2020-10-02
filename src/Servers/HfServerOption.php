@@ -14,7 +14,7 @@ use Psr\Http\Server\MiddlewareInterface;
  *
  * @property-read string                    $name       名称
  * @property-read int                       $type       Hyperf 服务端类型.
- *                                                      @see \Hyperf\Server\Server
+ * @see \Hyperf\Server\Server
  *
  * @property-read int                       $sock_type  Swoole 定义的 socket type.
  * @property-read string                    $host       127.0.0.1 或 0.0.0.0

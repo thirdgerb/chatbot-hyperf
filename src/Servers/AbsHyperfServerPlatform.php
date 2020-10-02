@@ -58,14 +58,25 @@ abstract class AbsHyperfServerPlatform extends AbsPlatform
     }
 
 
+    /**
+     * 初始化 Hyperf 服务端的逻辑. 比如注册控制器等.
+     */
     abstract protected function initializeHyperf() : void;
 
+    /**
+     * 获取 Hyperf 平台的配置.
+     * Hyperf 作为微服务框架, 一个项目相当于 Commune 中的一个平台.
+     * 由于 Commune 项目要做同构, 所以要有能力启动多个项目.
+     *
+     * @return HfPlatformOption
+     */
     abstract public function getHyperfPlatformOption() : HfPlatformOption;
 
     /**
      * 由于 Hyperf 自身是微服务框架
      * 而 Commune Studio 是全栈式的, 要通过 hyperf 开启若干个端.
-     * 因此许多 Hyperf 的单点配置策略在这里都要改变为可以任意配置的. 因此有这个环节.
+     * 因此许多 Hyperf 的单点配置策略在这里都要改变为可以任意配置的.
+     * 因此有这个环节.
      */
     protected function hackHyperf() : void
     {
@@ -81,6 +92,11 @@ abstract class AbsHyperfServerPlatform extends AbsPlatform
         }
     }
 
+    /**
+     * 使用 Server 的 exceptionHandler 替换 Hyperf 的默认配置
+     * @param ConfigInterface $config
+     * @param HfServerOption $option
+     */
     protected function hackExceptionHandlers(ConfigInterface $config, HfServerOption $option) : void
     {
         $hacks = $option->exceptionHandlers;
@@ -94,6 +110,11 @@ abstract class AbsHyperfServerPlatform extends AbsPlatform
         $config->set($key, $hacks);
     }
 
+    /**
+     * 使用 Server 的中间件配置替换掉 hyperf 的相关配置.
+     * @param ConfigInterface $config
+     * @param HfServerOption $option
+     */
     protected function hackMiddleware(ConfigInterface $config, HfServerOption $option)  : void
     {
         $hacks = $option->middelware;
@@ -107,12 +128,18 @@ abstract class AbsHyperfServerPlatform extends AbsPlatform
         $config->set($key, $hacks);
     }
 
+    /**
+     * 启动 Hyperf 的 Server.
+     */
     public function serve(): void
     {
         // 环境检查.
         $this->checkEnvironment();
 
+        // 替换 hyperf 的全局配置
         $this->hackHyperf();
+
+        // 对 hyperf 进一步初始化, 比如可以注册路由
         $this->initializeHyperf();
 
         $console = $this->host->getConsoleLogger();

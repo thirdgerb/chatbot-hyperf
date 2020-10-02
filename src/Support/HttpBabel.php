@@ -11,6 +11,9 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Psr\Http\Message\ServerRequestInterface as Psr7Request;
 
 
+/**
+ * 在 Hyperf 的场景中, 将 Swoole, Symfony, Hyperf 的 request互转.
+ */
 class HttpBabel
 {
 

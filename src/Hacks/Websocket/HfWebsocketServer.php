@@ -29,6 +29,15 @@ class HfWebsocketServer extends Server
      */
     protected $console;
 
+    /**
+     * HfWebsocketServer constructor.
+     * @param ContainerInterface $container
+     * @param HttpDispatcher $dispatcher
+     * @param ExceptionHandlerDispatcher $exceptionHandlerDispatcher
+     * @param ResponseEmitter $responseEmitter
+     * @param StdoutLoggerInterface $logger
+     * @param Host $host
+     */
     public function __construct(
         ContainerInterface $container,
         HttpDispatcher $dispatcher,

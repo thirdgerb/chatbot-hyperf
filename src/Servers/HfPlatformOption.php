@@ -7,8 +7,6 @@ namespace Commune\Chatbot\Hyperf\Servers;
 use Commune\Support\Option\AbsOption;
 use Commune\Support\Swoole\ServerSettingOption;
 use Hyperf\Server\Server;
-use Hyperf\Server\SwooleEvent;
-use Hyperf\Framework\Bootstrap;
 
 /**
  * 使用 Hyperf 作为服务端平台的配置.

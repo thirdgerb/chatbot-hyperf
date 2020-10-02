@@ -13,12 +13,20 @@ use Hyperf\SocketIOServer\SocketIO;
 use Hyperf\WebSocketServer\Sender;
 use Psr\Log\LoggerInterface;
 
+/**
+ * 修改 Hyperf SocketIO 的 Server, 主要是加进去 Host.
+ */
 class HfSocketIO extends SocketIO
 {
     /**
      * @var Host
      */
     protected $host;
+
+    /**
+     * @var LoggerInterface
+     */
+    protected $stdoutLogger;
 
     public function __construct(
         Host $host,
@@ -32,9 +40,10 @@ class HfSocketIO extends SocketIO
         $this->host = $host;
         parent::__construct($stdoutLogger, $sender, $decoder, $encoder, $sidProvider);
 
-        // 替换默认的日志. 不要打印在 console里.
-        // todo
-        // $this->stdoutLogger = $this->host->getProcContainer()->get(LoggerInterface::class);
+        // 替换日志为 LoggerInterface
+        $this->stdoutLogger = $host
+            ->getProcContainer()
+            ->make(LoggerInterface::class);
     }
 
 }
