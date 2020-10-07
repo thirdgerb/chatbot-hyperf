@@ -26,13 +26,12 @@ class HfSocketIOPlatformConfig extends IPlatformConfig
             ],
             'options' => [
                 HfSocketIOConfig::class => [
-                    'servers' => [
+                    'server' => [
                         'name' => '',
                         'host' => '127.0.0.1',
                         'port' => 9503,
                     ],
                     'processes' => [],
-                    'settings' => [],
                 ],
             ],
         ];

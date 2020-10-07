@@ -32,13 +32,12 @@ class TcpGhostPlatformConfig extends IPlatformConfig
             'options' => [
                 Ghost\Tcp\SwlCoGhostOption::class => [
                     'serverOption' => [
-                        'workerNum' => 2,
                         'host' => env('TCP_GHOST_HOST', '127.0.0.1'),
                         'port' => env('TCP_GHOST_PORT', '12315'),
                         // Swoole Server 的配置.
                         'serverSettings' => [
-                            'work_num' => 2,
-                            'reactor_num' => 2,
+                            'open_eof_split' => true, // 启用 EOF 自动分包
+                            'package_eof' => "\r\n",
                         ],
                     ],
                     /**

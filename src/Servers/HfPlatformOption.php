@@ -16,7 +16,7 @@ use Hyperf\Server\Server;
  * @property-read int $mode
  * @property-read HfServerOption[] $servers
  * @property-read string[] $processes
- * @property-read ServerSettingOption $settings
+ * @property-read array $settings
  * @property-read array[] $callbacks
  */
 class HfPlatformOption extends AbsOption
@@ -30,20 +30,8 @@ class HfPlatformOption extends AbsOption
             'type' => Server::class,
             'processes' => [],
             'settings' => [
-                'enable_coroutine' => true,
-                'worker_num' => swoole_cpu_num(),
-                // 'pid_file' => BASE_PATH . '/runtime/hyperf.pid',
-                'open_tcp_nodelay' => true,
-                'max_coroutine' => 100000,
-                'open_http2_protocol' => true,
-                'max_request' => 100000,
-                'socket_buffer_size' => 2 * 1024 * 1024,
-                'buffer_output_size' => 2 * 1024 * 1024,
             ],
             'callbacks' => [
-//                SwooleEvent::ON_WORKER_START => [Bootstrap\WorkerStartCallback::class, 'onWorkerStart'],
-//                SwooleEvent::ON_PIPE_MESSAGE => [Bootstrap\PipeMessageCallback::class, 'onPipeMessage'],
-//                SwooleEvent::ON_WORKER_EXIT => [Bootstrap\WorkerExitCallback::class, 'onWorkerExit'],
             ],
         ];
     }
@@ -52,7 +40,6 @@ class HfPlatformOption extends AbsOption
     {
         return [
             'servers[]' => HfServerOption::class,
-            'settings' => ServerSettingOption::class,
         ];
     }
 

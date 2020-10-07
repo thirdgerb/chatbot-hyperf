@@ -22,7 +22,7 @@ use Psr\Http\Server\MiddlewareInterface;
  * @property-read int                       $port       监听端口.
  * @property-read array[]                   $callbacks  监听事件.
  *
- * @property-read ServerSettingOption       $settings   Swoole Server 的配置.
+ * @property-read array                     $settings   Swoole Server 的配置.
  * @property-read string[]|null             $middelware Hyperf ServerName 的中间件.
  * @property-read string[]|null             $exceptionHandlers 异常处理器.
  *
@@ -42,8 +42,7 @@ class HfServerOption extends AbsOption
             'sock_type' => SWOOLE_SOCK_TCP,
             'callbacks' => [
             ],
-            'settings' => [
-            ],
+            'settings' => ServerSettingOption::stub(),
             'middlewares' => [
             ],
             'exceptionHandlers' => [
@@ -55,9 +54,7 @@ class HfServerOption extends AbsOption
 
     public static function relations(): array
     {
-        return [
-            'settings' => ServerSettingOption::class,
-        ];
+        return [];
     }
 
     public static function validate(array $data): ? string /* errorMsg */

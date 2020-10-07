@@ -23,13 +23,12 @@ class HfHttpPlatformConfig extends IPlatformConfig
             ],
             'options' => [
                 HfHttpConfig::class => [
-                    'servers' => [
+                    'server' => [
                         'name' => '',
                         'host' => '127.0.0.1',
                         'port' => 9501,
                     ],
                     'processes' => [],
-                    'settings' => [],
                     'routes' => [
                     ],
                 ],

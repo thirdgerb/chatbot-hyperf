@@ -4,15 +4,15 @@ namespace Commune\Chatbot\Hyperf\Platforms\SocketIO;
 
 
 use Hyperf\SocketIOServer;
+use Commune\Blueprint\CommuneEnv;
+use Commune\Support\Utils\StringUtils;
 use Commune\Support\Option\AbsOption;
 use Commune\Chatbot\Hyperf\Servers\HfPlatformOption;
-use Commune\Support\Swoole\ServerSettingOption;
 
 /**
  * Hyperf 中 websocket 服务端使用的配置.
  *
- * @property-read HfSocketIOServerOption[] $servers     Hyperf Server 的配置.
- * @property-read ServerSettingOption $settings         Swoole 服务器的配置.
+ * @property-read HfSocketIOServerOption    $server     Hyperf Server 的配置.
  *
  * @property-read string[] $processes       Server 的子进程.
  *
@@ -30,19 +30,13 @@ class HfSocketIOConfig extends AbsOption
     public static function stub(): array
     {
         return [
-
             'servers' => [],
-
             'path' => '/socket.io/',
             'controller' => SocketIOExampleController::class,
             'namespaces' => [
 //                '/nsp' => SocketIOExampleController::class,
             ],
-
             'processes' => [],
-
-            'settings' => [],
-
             'sidProvider' => SocketIOServer\SidProvider\LocalSidProvider::class,
             'roomProvider' => SocketIOServer\Room\RedisAdapter::class,
         ];
@@ -51,8 +45,7 @@ class HfSocketIOConfig extends AbsOption
     public static function relations(): array
     {
         return [
-            'settings' => ServerSettingOption::class,
-            'servers[]' => HfSocketIOServerOption::class,
+            'server' => HfSocketIOServerOption::class,
         ];
     }
 
@@ -65,22 +58,19 @@ class HfSocketIOConfig extends AbsOption
     {
         $servers = [];
 
-        $settings = $this->settings->toArray();
+        $name = $this->server->name;
+        $serverData = $this->server->toArray();
+        $serverData['settings']['pid_file'] = $serverData['settings']['pid_file']
+            ?? StringUtils::gluePath(
+                CommuneEnv::getRuntimePath(),
+                "pid/$name.pid"
+            );
 
-
-        foreach ($this->servers as $serverOption) {
-            $name = $serverOption->name;
-
-            $serverData = $serverOption->toArray();
-            $serverData['settings'] = $settings;
-            $serverData['settings']['pid_file'] =
-                $serverData['settings']['pid_file']
-                ?? BASE_PATH . "/runtime/pid/$name.pid";
-
-            $servers[] = $serverData;
-        }
+        $servers[] = $serverData;
 
         $data = [];
+        $data['mode'] = SWOOLE_PROCESS;
+        $data['type'] = \Hyperf\Server\Server::class;
         $data['servers'] = $servers;
         $data['processes'] = $this->processes;
 
