@@ -26,6 +26,7 @@ class HfTranslatorServiceProvider extends TranslatorBySymfonyProvider
                 'config' => [],
             ],
             'initStorage' => null,
+            'load' => CommuneEnv::isLoadingResource(),
             'reset' => CommuneEnv::isResetRegistry(),
             'resource' => StringUtils::gluePath(
                 CommuneEnv::getResourcePath(),

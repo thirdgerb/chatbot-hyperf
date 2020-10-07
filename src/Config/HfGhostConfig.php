@@ -171,12 +171,6 @@ class HfGhostConfig extends IGhostConfig
             'maxBacktrace' => 3,
 
             'defaultContextName' => 'md.demo.commune_v2_intro',
-            'sceneContextNames' => [
-                Components\Demo\Maze\Maze::genUcl()->encode(),
-                Components\HeedFallback\Context\TeachTasks::genUcl()->encode(),
-                NLUManagerContext::genUcl()->encode(),
-                'md.demo.*'
-            ],
 
             'defaultHeedFallback' =>[
                 Components\HeedFallback\Action\HeedFallback::class,

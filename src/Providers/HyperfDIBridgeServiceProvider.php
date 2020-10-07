@@ -26,6 +26,8 @@ class HyperfDIBridgeServiceProvider extends ServiceProvider
         return [
 
             'singletons' => [
+                // http 工厂
+                Hyperf\Guzzle\ClientFactory::class,
                 // redis 工厂.
                 Hyperf\Redis\RedisFactory::class,
                 // server 端.
