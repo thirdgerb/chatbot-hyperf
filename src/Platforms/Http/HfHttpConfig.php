@@ -4,15 +4,15 @@
 namespace Commune\Chatbot\Hyperf\Platforms\Http;
 
 
+use Commune\Blueprint\CommuneEnv;
 use Commune\Chatbot\Hyperf\Servers\HfPlatformOption;
 use Commune\Support\Option\AbsOption;
-use Commune\Support\Swoole\ServerSettingOption;
+use Commune\Support\Utils\StringUtils;
 
 /**
  * hyperf http 服务端相关配置.
- * @property HfHttpServerOption[] $servers          服务端的配置.
+ * @property HfHttpServerOption $server             服务端的配置.
  * @property string[] $processes                    服务端启动时运行的子进程
- * @property ServerSettingOption $settings          Swoole server 的基本配置
  * @property string[] $routes                       启动时加载的路由文件. 可以放平台相关的配置文件.
  */
 class HfHttpConfig extends AbsOption
@@ -21,9 +21,8 @@ class HfHttpConfig extends AbsOption
     public static function stub(): array
     {
         return [
-            'servers' => [],
+            'server' => [],
             'processes' => [],
-            'settings' => [],
             'routes' => [],
         ];
     }
@@ -31,8 +30,7 @@ class HfHttpConfig extends AbsOption
     public static function relations(): array
     {
         return [
-            'settings' => ServerSettingOption::class,
-            'servers[]' => HfHttpServerOption::class,
+            'server' => HfHttpServerOption::class,
         ];
     }
 
@@ -45,24 +43,21 @@ class HfHttpConfig extends AbsOption
     {
         $servers = [];
 
-        $settings = $this->settings->toArray();
+        $name = $this->server->name;
 
+        $serverData = $this->server->toArray();
+        $serverData['settings']['pid_file'] = $serverData['settings']['pid_file']
+            ?? StringUtils::gluePath(
+                CommuneEnv::getRuntimePath(),
+               "pid/$name.pid"
+            );
 
-        foreach ($this->servers as $serverOption) {
-            $name = $serverOption->name;
-
-            $serverData = $serverOption->toArray();
-            $serverData['settings'] = $settings;
-            $serverData['settings']['pid_file'] =
-                $serverData['settings']['pid_file']
-                ?? BASE_PATH . "/runtime/pid/$name.pid";
-
-            $servers[] = $serverData;
-        }
-
+        $servers[] = $serverData;
         $data = [];
         $data['servers'] = $servers;
         $data['processes'] = $this->processes;
+        $data['mode'] = SWOOLE_PROCESS;
+        $data['type'] = \Hyperf\Server\Server::class;
 
         return new HfPlatformOption($data);
     }
